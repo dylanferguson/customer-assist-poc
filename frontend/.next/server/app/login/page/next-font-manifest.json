@@ -1,0 +1,11 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/app/login/page": [
+      "static/media/HI_diYsKILxRpg3hIP6sJ7fM7PqPMcMnZFqUwX28DMyQtMlrTFcZZJmOpw-s.p.9ebb60be.woff2",
+      "static/media/nwpBtKy2OAdR1K_IwhWudF_R9QMylBJAV3Bo8Ky462EK9CsYm4fA1Ts-s.p.9973e45e.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}
