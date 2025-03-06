@@ -1,4 +1,4 @@
-import { ChatFab } from "./fab"
+import { ChatFab } from "./FAB"
 
 export function Chat() {
   return (
