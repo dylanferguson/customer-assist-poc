@@ -20,6 +20,7 @@ interface ConversationData {
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [loading, setLoading] = useState(true);
     const [conversation, setConversation] = useState<ConversationData | null>(null);
+    const [messageInput, setMessageInput] = useState('');
 
     useEffect(() => {
         // Mock fetch - replace with actual API call
@@ -60,6 +61,45 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                             sender: 'assistant',
                             type: 'agent',
                             timestamp: '2022-08-22T13:54:30'
+                        },
+                        {
+                            id: '5',
+                            content: 'Specifically, I can\'t figure out how to change my notification preferences.',
+                            sender: 'user',
+                            timestamp: '2022-08-22T13:55:00'
+                        },
+                        {
+                            id: '6',
+                            content: 'I can help you with that! To change your notification preferences, go to Settings > Notifications. You\'ll see options for email, push, and in-app notifications there.',
+                            sender: 'assistant',
+                            type: 'agent',
+                            timestamp: '2022-08-22T13:55:30'
+                        },
+                        {
+                            id: '7',
+                            content: 'Thanks! I see those options now. One more question - can I set quiet hours?',
+                            sender: 'user',
+                            timestamp: '2022-08-22T13:56:00'
+                        },
+                        {
+                            id: '8',
+                            content: 'Yes, absolutely! In the same Notifications section, scroll down to "Quiet Hours." You can set different schedules for weekdays and weekends.',
+                            sender: 'assistant',
+                            type: 'agent',
+                            timestamp: '2022-08-22T13:56:30'
+                        },
+                        {
+                            id: '9',
+                            content: 'Perfect, that\'s exactly what I needed. Thank you so much for your help!',
+                            sender: 'user',
+                            timestamp: '2022-08-22T13:57:00'
+                        },
+                        {
+                            id: '10',
+                            content: 'You\'re welcome! Is there anything else you\'d like help with today?',
+                            sender: 'assistant',
+                            type: 'agent',
+                            timestamp: '2022-08-22T13:57:30'
                         }
                     ]
                 };
@@ -72,8 +112,35 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         fetchConversation();
     }, [conversationId]);
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!messageInput.trim() || !conversation) return;
+
+        const newMessage: Message = {
+            id: String(Date.now()),
+            content: messageInput.trim(),
+            sender: 'user',
+            timestamp: new Date().toISOString()
+        };
+
+        setConversation(prev => prev ? {
+            ...prev,
+            messages: [...prev.messages, newMessage]
+        } : null);
+
+        setMessageInput('');
+    };
+
     if (loading) {
-        return <Spinner />;
+        return (
+            <div className="flex items-center justify-center w-full h-full">
+                <div className="text-center">
+                    <Spinner />
+                    <p className="text-sm text-gray-500">Loading messages...</p>
+                </div>
+            </div>
+        );
     }
 
     if (!conversation) {
@@ -93,14 +160,14 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     return (
         <div className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto">
-                <div className="p-4 mb-4 text-sm">
+                <div className="p-4 mt-2 text-sm">
                     <p className="text-center text-gray-500">
                         Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
                         Your information is handled in accordance with our Privacy Policy.
                     </p>
                 </div>
 
-                <div className="p-4">
+                <div className="p-3">
                     <div className="mb-4 text-sm font-semibold text-center text-gray-500">
                         {format(new Date(conversation.startDate), "dd MMMM, yyyy, h:mmaaa")}
                     </div>
@@ -139,20 +206,23 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                 </div>
             </div>
 
-            <div className="p-4 border-t">
-                <div className="flex items-center gap-2">
-                    <input
-                        type="text"
+            <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-white border-t">
+                <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                    <textarea
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
                         placeholder="Type your message..."
-                        className="flex-1 h-10 min-w-0 px-3 text-sm border rounded-md bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        rows={1}
+                        className="flex-1 min-w-0 px-3 py-2 overflow-y-auto text-sm border rounded-md resize-none bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                     <button
+                        type="submit"
                         className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
                         aria-label="Send message"
                     >
                         <Send className="w-5 h-5" />
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     );

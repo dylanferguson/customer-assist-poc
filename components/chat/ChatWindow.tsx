@@ -26,15 +26,15 @@ export const ChatWindow = ({ toggleChat }: ChatProps) => {
     }
 
     return (
-        <div className="flex flex-col overflow-hidden duration-300 bg-white rounded-lg shadow-lg w-90 h-150 animate-in slide-in-from-bottom-5">
+        <div className="relative flex flex-col overflow-hidden duration-300 bg-white rounded-lg shadow-lg w-90 max-h-[80vh] h-[600px] animate-in slide-in-from-bottom-5">
             <div className="flex items-center justify-between p-2 bg-primary">
-                {(showInbox || selectedConversation) && (
+                {selectedConversation && (
                     <Button
                         variant="ghost"
                         size="icon"
                         className="w-8 h-8 cursor-pointer text-primary-foreground hover:text-primary-foreground hover:bg-primary-secondary"
                         onClick={handleBackClick}
-                        aria-label={selectedConversation ? "Back to inbox" : "Back to welcome"}
+                        aria-label="Back to inbox"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
@@ -52,7 +52,7 @@ export const ChatWindow = ({ toggleChat }: ChatProps) => {
                     <X className="w-4 h-4" />
                 </Button>
             </div>
-            <div className="relative flex flex-1 h-full">
+            <div className="flex flex-1 h-full">
                 {selectedConversation ? (
                     <div className="flex flex-1 duration-300 animate-in fade-in slide-in-from-right-5">
                         <Conversation conversationId={selectedConversation} />

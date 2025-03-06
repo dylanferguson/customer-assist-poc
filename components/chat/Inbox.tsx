@@ -116,11 +116,17 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
         onSelectConversation?.(id)
     }
 
+    const handleNewMessage = () => {
+        // Create a new conversation ID and navigate to it
+        const newConversationId = 'new'
+        onSelectConversation?.(newConversationId)
+    }
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center flex-1 p-4">
                 <Spinner />
-                <p className="mt-2 text-sm text-muted-foreground">Loading messages...</p>
+                <p className="mt-2 text-sm text-muted-foreground">Loading conversations...</p>
             </div>
         )
     }
@@ -161,7 +167,10 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                     </div>
                 )}
 
-                <button className="absolute p-3 transition-transform rounded-lg shadow-lg cursor-pointer bottom-4 right-4 bg-primary text-primary-foreground hover:scale-105">
+                <button
+                    onClick={handleNewMessage}
+                    className="absolute p-3 transition-transform rounded-lg shadow-lg cursor-pointer bottom-4 right-4 bg-primary text-primary-foreground hover:scale-105"
+                >
                     <SquarePen className="w-6 h-6" />
                 </button>
             </div>
