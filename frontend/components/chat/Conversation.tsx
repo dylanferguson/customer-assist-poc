@@ -65,8 +65,8 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto">
+        <div className="relative flex flex-col">
+            <div className="overflow-y-auto max-h-[552px] pb-[57px]">
                 <div className="p-4 mt-2 text-sm">
                     <p className="text-center text-gray-500">
                         Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
@@ -81,7 +81,12 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
                     <div className="space-y-4">
                         {messagesData.data.map((message) => (
-                            <div key={message.id} className="space-y-1">
+                            <div
+                                key={message.id}
+                                className="space-y-1"
+                                role="article"
+                                aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
+                            >
                                 <div
                                     className={`flex items-start gap-2 ${message.participantRole === 'CUSTOMER' ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
@@ -94,8 +99,10 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                             )}
                                         </div>
                                     )}
-                                    <div className={`max-w-[70%] rounded-lg p-3 text-sm ${message.participantRole === 'CUSTOMER' ? 'bg-black text-white' : 'bg-gray-100 text-black'
-                                        }`}>
+                                    <div
+                                        tabIndex={0}
+                                        className={`max-w-[70%] rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${message.participantRole === 'CUSTOMER' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
+                                    >
                                         <div>{message.content}</div>
                                         <div className="text-[10px] mt-1 opacity-70">
                                             {format(new Date(message.createdAt), "h:mmaaa")}

@@ -26,7 +26,7 @@ export const ChatWindow = ({ toggleChat }: ChatProps) => {
     }
 
     return (
-        <div className="relative flex flex-col overflow-hidden duration-300 bg-white rounded-lg shadow-lg w-90 max-h-[80vh] h-[600px] animate-in slide-in-from-bottom-5">
+        <div className="relative flex flex-col overflow-hidden duration-300 bg-white rounded-lg shadow-lg w-90 h-[600px] animate-in slide-in-from-bottom-5">
             <div className="flex items-center justify-between p-2 bg-primary">
                 {selectedConversation && (
                     <Button
