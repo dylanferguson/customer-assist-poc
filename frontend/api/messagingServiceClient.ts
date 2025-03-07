@@ -1,6 +1,6 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import jwt from 'jsonwebtoken';
+import { jwtVerify, SignJWT } from 'jose';
 
 // Type definitions based on the OpenAPI spec
 export interface Error {
@@ -82,16 +82,23 @@ export class MessagingServiceClient {
      * @param config Optional axios configuration
      */
     constructor(config?: AxiosRequestConfig) {
-        // Get or create JWT token
-        const token = this.getOrCreateJwt();
-
         this.client = axios.create({
             baseURL: this.baseUrl,
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             ...config,
+        });
+
+        // Add a request interceptor to include the JWT token
+        this.client.interceptors.request.use(async (config) => {
+            const token = await this.getOrCreateJwt();
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
+            return config;
+        }, (error: AxiosError) => {
+            return Promise.reject(error);
         });
     }
 
@@ -100,7 +107,7 @@ export class MessagingServiceClient {
      * @returns JWT token
      * @private
      */
-    private getOrCreateJwt(): string {
+    private async getOrCreateJwt(): Promise<string> {
         // NOTE: This is for PoC purposes only. In a production environment,
         // proper authentication would be implemented instead of generating tokens client-side.
 
@@ -115,11 +122,10 @@ export class MessagingServiceClient {
 
         // In a real implementation, the server would sign this token
         // This is just for demo/PoC purposes
-        const token = jwt.sign(
-            { sub: userId },
-            'demo-secret-key', // This would be a proper secret on the server
-            { expiresIn: '7d' }
-        );
+        const token = await new SignJWT({ sub: userId })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('7d')
+            .sign(new TextEncoder().encode('demo-secret-key'));
 
         // Store in localStorage
         localStorage.setItem(MessagingServiceClient.JWT_STORAGE_KEY, token);

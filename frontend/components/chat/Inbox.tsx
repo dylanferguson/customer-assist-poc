@@ -1,19 +1,10 @@
 import { Spinner } from "../ui/spinner"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { SquarePen, Calendar, HelpCircle, Search } from "lucide-react"
 import { LinkCard } from "../ui/link-card"
 import { ConversationListItem } from "./ConversationListItem"
 import { FilterButton } from "../ui/filter-button"
-
-export interface Conversation {
-    id: string
-    type: 'bot' | 'agent'
-    name: string
-    subject: string
-    lastMessage: string
-    timestamp: Date
-    unread: boolean
-}
+import { useMessagingService } from "../../hooks/useMessagingService"
 
 export interface InboxProps {
     onSelectConversation?: (id: string) => void
@@ -54,70 +45,21 @@ const EmptyInbox = () => {
 }
 
 const Inbox = ({ onSelectConversation }: InboxProps) => {
-    const [isLoading, setIsLoading] = useState(true)
-    const [activeConversations, setActiveConversations] = useState<Conversation[]>([])
-    const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([])
     const [activeFilter, setActiveFilter] = useState<'active' | 'archived'>('active')
+    const { useConversations } = useMessagingService()
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false)
-            // Sample data split between active and archived
-            setActiveConversations([
-                {
-                    id: '1',
-                    type: 'bot',
-                    name: 'Virtual Assistant',
-                    subject: 'General Inquiry',
-                    lastMessage: 'How can I help you today?',
-                    timestamp: new Date(),
-                    unread: true
-                },
-                {
-                    id: '2',
-                    type: 'agent',
-                    name: 'Sarah from Support',
-                    subject: 'Loan Application Review',
-                    lastMessage: "I've reviewed your loan application...",
-                    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-                    unread: false
-                },
-            ])
+    // Query conversations with archived filter
+    const { data: conversationList, isLoading } = useConversations({
+        is_archived: activeFilter === 'archived'
+    })
 
-            setArchivedConversations([
-                {
-                    id: '3',
-                    type: 'agent',
-                    name: 'Michael Chen',
-                    subject: 'Credit Card Application',
-                    lastMessage: 'Your application has been approved',
-                    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-                    unread: true
-                },
-                {
-                    id: '4',
-                    type: 'bot',
-                    name: 'Virtual Assistant',
-                    subject: 'Account Security Alert',
-                    lastMessage: 'We noticed a login from a new device',
-                    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-                    unread: false
-                }
-            ])
-        }, 200)
+    const currentConversations = conversationList?.conversations || []
 
-        return () => clearTimeout(timer)
-    }, [])
-
-    const currentConversations = activeFilter === 'active' ? activeConversations : archivedConversations
-
-    // Add click handler to ConversationListItem
     const handleConversationClick = (id: string) => {
         onSelectConversation?.(id)
     }
 
     const handleNewMessage = () => {
-        // Create a new conversation ID and navigate to it
         const newConversationId = 'new'
         onSelectConversation?.(newConversationId)
     }

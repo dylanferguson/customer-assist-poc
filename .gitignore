@@ -15,9 +15,12 @@
 /coverage
 
 # next.js
-**/.next/
-**/out/
-**/dist/
+frontend/.next/
+frontend/out/
+frontend/dist/
+
+# API
+api/dist/
 
 # production
 /build
