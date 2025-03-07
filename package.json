@@ -1,10 +1,14 @@
 {
   "name": "customer-assist-poc",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "api",
+    "frontend"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently -n \"API,Frontend\" -c \"green,blue\" \"cd api && npm run start:dev\" \"cd frontend && npm run dev\""
+    "dev": "concurrently -n \"API,Frontend\" -c \"green,blue\" \"npm run start:dev -w api\" \"npm run dev -w frontend\""
   },
   "keywords": [],
   "author": "",
