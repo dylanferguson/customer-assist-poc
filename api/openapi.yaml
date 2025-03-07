@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Messaging Service API
-  version: '1.0.0'
+  version: "1.0.0"
   description: RESTful API for managing conversations and messages
 
 servers:
@@ -84,11 +84,11 @@ components:
           type: array
           items:
             allOf:
-              - $ref: '#/components/schemas/Conversation'
+              - $ref: "#/components/schemas/Conversation"
               - type: object
                 properties:
                   lastMessage:
-                    $ref: '#/components/schemas/Message'
+                    $ref: "#/components/schemas/Message"
         _links:
           type: object
           properties:
@@ -104,7 +104,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Message'
+            $ref: "#/components/schemas/Message"
         _links:
           type: object
           properties:
@@ -121,14 +121,24 @@ paths:
   /conversations:
     post:
       summary: Create a conversation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Optional title for the conversation
       responses:
-        '201':
+        "201":
           description: Conversation created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
-    
+                $ref: "#/components/schemas/Conversation"
+
     get:
       summary: Get conversations list
       parameters:
@@ -156,12 +166,12 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: List of conversations
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversationList'
+                $ref: "#/components/schemas/ConversationList"
 
   /conversations/{conversationId}:
     parameters:
@@ -170,17 +180,17 @@ paths:
         required: true
         schema:
           type: string
-    
+
     get:
       summary: Get conversation details
       responses:
-        '200':
+        "200":
           description: Conversation details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
-    
+                $ref: "#/components/schemas/Conversation"
+
     patch:
       summary: Update conversation details
       requestBody:
@@ -198,12 +208,12 @@ paths:
                 subject:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated conversation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
+                $ref: "#/components/schemas/Conversation"
 
   /conversations/{conversationId}/messages:
     parameters:
@@ -212,17 +222,17 @@ paths:
         required: true
         schema:
           type: string
-    
+
     get:
       summary: Get conversation messages
       responses:
-        '200':
+        "200":
           description: List of messages
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageList'
-    
+                $ref: "#/components/schemas/MessageList"
+
     post:
       summary: Send a message
       requestBody:
@@ -235,9 +245,9 @@ paths:
                 content:
                   type: string
       responses:
-        '201':
+        "201":
           description: Message sent
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Message'
+                $ref: "#/components/schemas/Message"

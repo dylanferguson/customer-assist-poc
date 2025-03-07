@@ -44,11 +44,18 @@ Error responses will include a JSON body with an error message:
 POST /conversations
 ```
 
+Request body:
+```json
+{
+  "title": "Optional title for the conversation"
+}
+```
+
 Response:
 ```json
 {
   "id": "conv_123456789",
-  "title": "New Conversation",
+  "title": "Title", // Defaults to "New Conversation"
   "status": "open",  // "open" | "closed"
   "user_id": "usr_123456789",
   "createdAt": "2025-02-27T15:00:00Z",
