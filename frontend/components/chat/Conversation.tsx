@@ -66,7 +66,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     return (
         <div className="relative flex flex-col">
-            <div className="overflow-y-auto max-h-[552px] pb-[57px]">
+            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent', scrollbarGutter: 'stable' }}>
                 <div className="p-4 mt-2 text-sm">
                     <p className="text-center text-gray-500">
                         Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
