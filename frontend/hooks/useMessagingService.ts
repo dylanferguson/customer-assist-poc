@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-import { 
-  MessagingServiceClient, 
-  Conversation, 
-  ConversationList, 
-  Message, 
+import {
+  MessagingServiceClient,
+  Conversation,
+  ConversationList,
+  Message,
   MessageList,
   CreateConversationRequest,
   UpdateConversationRequest,
@@ -80,18 +80,18 @@ export const useMessagingService = () => {
   // Update a conversation
   const useUpdateConversation = (
     options?: UseMutationOptions<
-      Conversation, 
-      Error, 
+      Conversation,
+      Error,
       { conversationId: string; data: UpdateConversationRequest }
     >
   ) => {
     return useMutation({
-      mutationFn: ({ conversationId, data }) => 
+      mutationFn: ({ conversationId, data }) =>
         messagingClient.updateConversation(conversationId, data),
       onSuccess: (data, variables) => {
         // Update the conversation in the cache
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.conversation(variables.conversationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.conversation(variables.conversationId)
         });
         // Also update the conversations list
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
@@ -103,22 +103,22 @@ export const useMessagingService = () => {
   // Send a message
   const useSendMessage = (
     options?: UseMutationOptions<
-      Message, 
-      Error, 
+      Message,
+      Error,
       { conversationId: string; data: SendMessageRequest }
     >
   ) => {
     return useMutation({
-      mutationFn: ({ conversationId, data }) => 
+      mutationFn: ({ conversationId, data }) =>
         messagingClient.sendMessage(conversationId, data),
       onSuccess: (data, variables) => {
         // Update messages in the cache
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.messages(variables.conversationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.messages(variables.conversationId)
         });
         // Also update the conversation to reflect new message count
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.conversation(variables.conversationId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.conversation(variables.conversationId)
         });
         // Update conversations list to show latest message
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });

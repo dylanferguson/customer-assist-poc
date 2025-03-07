@@ -46,12 +46,13 @@ const EmptyInbox = () => {
 
 const Inbox = ({ onSelectConversation }: InboxProps) => {
     const [activeFilter, setActiveFilter] = useState<'active' | 'archived'>('active')
-    const { useConversations } = useMessagingService()
+    const { useConversations, useCreateConversation } = useMessagingService()
 
     // Query conversations with archived filter
     const { data: conversationList, isLoading } = useConversations({
         is_archived: activeFilter === 'archived'
     })
+    const createConversation = useCreateConversation()
 
     const currentConversations = conversationList?.conversations || []
 
@@ -59,9 +60,9 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
         onSelectConversation?.(id)
     }
 
-    const handleNewMessage = () => {
-        const newConversationId = 'new'
-        onSelectConversation?.(newConversationId)
+    const handleNewConversation = async () => {
+        const newConversation = await createConversation.mutateAsync({})
+        onSelectConversation?.(newConversation?.id)
     }
 
     if (isLoading) {
@@ -110,7 +111,7 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                 )}
 
                 <button
-                    onClick={handleNewMessage}
+                    onClick={handleNewConversation}
                     className="absolute p-3 transition-transform rounded-lg shadow-lg cursor-pointer bottom-4 right-4 bg-primary text-primary-foreground hover:scale-105"
                 >
                     <SquarePen className="w-6 h-6" />
