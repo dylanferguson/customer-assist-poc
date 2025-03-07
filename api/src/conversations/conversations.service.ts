@@ -34,7 +34,7 @@ export class ConversationsService {
 
   findAll(query: ConversationQueryDto) {
     let filteredConversations = [...this.conversations];
-    
+
     // Filter by archived status
     filteredConversations = filteredConversations.filter(
       (conv) => conv.archived === query.is_archived,
@@ -120,11 +120,11 @@ export class ConversationsService {
 
   getMessages(conversationId: string) {
     const messages = this.messages[conversationId] || [];
-    
+
     return {
       data: messages,
       _links: {
-        next: messages.length > 0 
+        next: messages.length > 0
           ? { href: `/conversations/${conversationId}/messages?cursor=${messages[messages.length - 1].id}` }
           : null,
       },
@@ -147,13 +147,13 @@ export class ConversationsService {
     if (!this.messages[conversationId]) {
       this.messages[conversationId] = [];
     }
-    
+
     this.messages[conversationId].push(message);
-    
+
     // Update conversation
     conversation.updatedAt = new Date();
     conversation.unread_count += 1;
-    
+
     return message;
   }
 } 

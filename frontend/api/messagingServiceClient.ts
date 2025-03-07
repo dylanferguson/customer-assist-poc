@@ -23,7 +23,7 @@ export interface Conversation {
 export interface Message {
     id: string;
     content: string;
-    contentType: string;
+    contentType: 'plain_text';
     createdAt: string;
     participantRole: 'CUSTOM_BOT' | 'CUSTOMER' | 'AGENT' | 'SYSTEM' | 'SUPERVISOR';
     participantName: string;
@@ -67,6 +67,7 @@ export interface GetConversationsRequest {
 
 export interface SendMessageRequest {
     content: string;
+    contentType: 'plain_text';
 }
 
 /**
