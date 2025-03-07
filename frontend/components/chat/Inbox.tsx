@@ -1,6 +1,6 @@
 import { Spinner } from "../ui/spinner"
 import { useState } from "react"
-import { SquarePen, Calendar, HelpCircle, Search } from "lucide-react"
+import { SquarePen, Calendar, HelpCircle, Search, MessageCircle, Archive } from "lucide-react"
 import { LinkCard } from "../ui/link-card"
 import { ConversationListItem } from "./ConversationListItem"
 import { FilterButton } from "../ui/filter-button"
@@ -84,12 +84,14 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                         <FilterButton
                             selected={activeFilter === 'active'}
                             onToggle={() => setActiveFilter('active')}
+                            icon={<MessageCircle className="w-4 h-4" />}
                         >
                             Active
                         </FilterButton>
                         <FilterButton
                             selected={activeFilter === 'archived'}
                             onToggle={() => setActiveFilter('archived')}
+                            icon={<Archive className="w-4 h-4" />}
                         >
                             Archived
                         </FilterButton>

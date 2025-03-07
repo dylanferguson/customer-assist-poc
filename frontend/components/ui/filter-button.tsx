@@ -1,14 +1,16 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { LucideIcon } from "lucide-react"
 
 interface FilterButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   selected?: boolean
   onToggle?: (selected: boolean) => void
+  icon?: React.ReactNode
   children: React.ReactNode
 }
 
 const FilterButton = React.forwardRef<HTMLButtonElement, FilterButtonProps>(
-  ({ selected = false, onToggle, className, children, onClick, ...props }, ref) => {
+  ({ selected = false, onToggle, className, children, icon, onClick, ...props }, ref) => {
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(event)
       onToggle?.(!selected)
@@ -27,6 +29,7 @@ const FilterButton = React.forwardRef<HTMLButtonElement, FilterButtonProps>(
         )}
         {...props}
       >
+        {icon && <span className="mr-2">{icon}</span>}
         {children}
       </button>
     )
