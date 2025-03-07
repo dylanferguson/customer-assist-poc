@@ -6,11 +6,16 @@ import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { AmazonConnectService } from './amazon-connect.service';
 
 @Injectable()
 export class ConversationsService {
   private conversations: Conversation[] = [];
   private messages: Record<string, Message[]> = {};
+
+  constructor(
+    private readonly amazonConnectService: AmazonConnectService,
+  ) { }
 
   createConversation(createConversationDto: CreateConversationDto): Conversation {
     const now = new Date();
