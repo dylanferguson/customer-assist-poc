@@ -29,7 +29,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                             />
                         )}
                         <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
-                            {conversation.lastMessage.participantRole === 'CUSTOM_BOT' ? (
+                            {conversation.lastMessage?.participantRole === 'CUSTOM_BOT' ? (
                                 <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
                             ) : (
                                 <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
@@ -40,7 +40,10 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <span className="block mb-1 text-xs text-gray-500">
-                            {format(new Date(conversation.lastMessage.createdAt), 'EEE h:mma')}
+                            {conversation.lastMessage ?
+                                format(new Date(conversation.lastMessage.createdAt), 'EEE h:mma') :
+                                'No messages'
+                            }
                         </span>
                         <div className="flex items-start justify-between">
                             <h3 className={`text-base ${conversation.unread_count > 0 ? 'font-bold' : 'font-medium'}`}>
@@ -48,7 +51,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                             </h3>
                         </div>
                         <p className={`text-sm truncate ${conversation.unread_count > 0 ? 'text-gray-800' : 'text-gray-500'}`}>
-                            {conversation.lastMessage.content}
+                            {conversation.lastMessage?.content || 'Start a new conversation'}
                         </p>
                     </div>
                 </div>
