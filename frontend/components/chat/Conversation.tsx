@@ -40,6 +40,13 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         setMessageInput('');
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e as unknown as React.FormEvent);
+        }
+    };
+
     const loading = isLoadingConversation || isLoadingMessages;
 
     if (loading) {
@@ -106,6 +113,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                     <textarea
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Type your message..."
                         rows={1}
                         className="flex-1 min-w-0 px-3 py-2 overflow-y-auto text-sm border rounded-md resize-none bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

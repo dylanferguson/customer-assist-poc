@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
-import { v4 as uuidv4 } from 'uuid';
-import { jwtVerify, SignJWT } from 'jose';
+import { v7 as uuidv7 } from 'uuid';
+import { SignJWT } from 'jose';
 
 // Type definitions based on the OpenAPI spec
 export interface Error {
@@ -119,11 +119,11 @@ export class MessagingServiceClient {
         }
 
         // Generate a new token with UUID as subject
-        const userId = uuidv4();
+        const userId = uuidv7();
 
         // In a real implementation, the server would sign this token
         // This is just for demo/PoC purposes
-        const token = await new SignJWT({ sub: userId })
+        const token = await new SignJWT({ sub: userId, name: 'John Doe' })
             .setProtectedHeader({ alg: 'HS256' })
             .setExpirationTime('7d')
             .sign(new TextEncoder().encode('demo-secret-key'));
