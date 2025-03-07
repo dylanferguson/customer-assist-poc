@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Spinner } from '../ui/spinner';
 import { format } from 'date-fns';
 import { Bot, UserRound, Send } from 'lucide-react';
@@ -8,6 +8,13 @@ import { useMessagingService } from '../../hooks/useMessagingService';
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [messageInput, setMessageInput] = useState('');
     const { useConversation, useMessages, useSendMessage } = useMessagingService();
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Scroll to bottom of messages
+    const scrollToBottom = useCallback(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, []);
+
 
     // Fetch conversation data
     const {
@@ -46,6 +53,13 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             handleSubmit(e as unknown as React.FormEvent);
         }
     };
+
+    // Scroll to bottom when messages change or on initial load
+    useEffect(() => {
+        if (messagesData) {
+            scrollToBottom();
+        }
+    }, [messagesData, scrollToBottom]);
 
     const loading = isLoadingConversation || isLoadingMessages;
 
@@ -111,6 +125,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                 </div>
                             </div>
                         ))}
+                        <div ref={messagesEndRef} />
                     </div>
                 </div>
             </div>
