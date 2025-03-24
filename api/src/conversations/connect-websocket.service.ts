@@ -28,11 +28,19 @@ export class ConnectWebsocketService {
             // Create new websocket connection
             const websocket = new WebSocket(websocketUrl);
 
-            // Set up event handlers
-            websocket.on('open', () => {
-                this.logger.log(`Websocket connection established for ${conversationId}`);
+            // Wait for connection to open
+            await new Promise((resolve, reject) => {
+                websocket.once('open', () => {
+                    this.logger.log(`Websocket connection established for ${conversationId}`);
+                    resolve(void 0);
+                });
+                websocket.once('error', (error) => reject(error));
+
+                // Set a timeout in case connection hangs
+                setTimeout(() => reject(new Error('WebSocket connection timeout')), 10000);
             });
 
+            // Set up event handlers
             websocket.on('message', (data) => {
                 this.logger.debug(`Received message for ${conversationId}: ${data}`);
                 // Update last activity timestamp
