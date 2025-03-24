@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Conversation, ConversationStatus } from './entities/conversation.entity';
 import { Message, ParticipantRole } from './entities/message.entity';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -17,8 +17,16 @@ export class ConversationsService {
     private readonly amazonConnectService: AmazonConnectService,
   ) { }
 
-  createConversation(createConversationDto: CreateConversationDto): Conversation {
+  async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
     const now = new Date();
+
+    // Start chat session with Amazon Connect
+    const connectSession = await this.amazonConnectService.startChat({
+      username: 'Customer'
+    });
+
+    Logger.log(connectSession);
+
     const conversation: Conversation = {
       id: `conv_${uuidv4()}`,
       title: createConversationDto.title,

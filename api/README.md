@@ -35,6 +35,11 @@ Error responses will include a JSON body with an error message:
   - X-RateLimit-Remaining: Remaining requests for the current hour
   - X-RateLimit-Reset: Unix timestamp when the limit resets
 
+## Environment Variables
+
+- `AWS_CONNECT_CONTACT_FLOW_ID`: The ID of the Amazon Connect contact flow to use for chat interactions
+- `AWS_CONNECT_INSTANCE_ID`: The ID of your Amazon Connect instance
+
 ## Resources
 
 ### Conversations
