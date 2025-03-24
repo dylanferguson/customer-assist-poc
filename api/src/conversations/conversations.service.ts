@@ -7,6 +7,7 @@ import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { AmazonConnectService } from './amazon-connect.service';
+import { ConnectParticipantService } from './connect-participant.service';
 
 @Injectable()
 export class ConversationsService {
@@ -15,17 +16,11 @@ export class ConversationsService {
 
   constructor(
     private readonly amazonConnectService: AmazonConnectService,
+    private readonly connectParticipantService: ConnectParticipantService,
   ) { }
 
   async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
     const now = new Date();
-
-    // Start chat session with Amazon Connect
-    const connectSession = await this.amazonConnectService.startChat({
-      username: 'Customer'
-    });
-
-    Logger.log(connectSession);
 
     const conversation: Conversation = {
       id: `conv_${uuidv4()}`,
@@ -42,6 +37,18 @@ export class ConversationsService {
 
     this.conversations.push(conversation);
     this.messages[conversation.id] = [];
+
+    // Start chat session with Amazon Connect
+    const connectSession = await this.amazonConnectService.startChat({
+      customerDisplayName: 'Customer'
+    });
+
+    const participantConnection = await this.connectParticipantService.createParticipantConnection({
+      participantToken: connectSession.ParticipantToken,
+    });
+
+    Logger.log(participantConnection);
+
     return conversation;
   }
 

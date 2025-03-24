@@ -7,6 +7,7 @@ const envSchema = z.object({
   AWS_SESSION_TOKEN: z.string().optional(),
   AWS_CONNECT_INSTANCE_ID: z.string().min(1),
   AWS_CONNECT_CONTACT_FLOW_ID: z.string().min(1),
+  AWS_CONNECT_CHAT_DURATION_IN_MINUTES: z.number().min(1).default(60 * 24 * 7),
 });
 
 export function validate(config: Record<string, unknown>) {

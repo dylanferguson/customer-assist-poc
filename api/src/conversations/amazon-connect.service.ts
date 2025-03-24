@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     ConnectClient,
+    RehydrationType,
     StartChatContactCommand,
 } from "@aws-sdk/client-connect";
 import { Env } from '../config/env.validation';
@@ -37,15 +38,32 @@ export class AmazonConnectService {
         });
     }
 
-    async startChat(participantDetails: {
-        username: string;
+    async startChat({
+        customerDisplayName,
+        lastContactId,
+        attributes,
+    }: {
+        customerDisplayName: string;
+        lastContactId?: string;
+        attributes?: Record<string, string>;
     }) {
         const command = new StartChatContactCommand({
             InstanceId: this.instanceId,
             ContactFlowId: this.contactFlowId,
+            ChatDurationInMinutes: this.configService.get<number>('AWS_CONNECT_CHAT_DURATION_IN_MINUTES'),
+            SupportedMessagingContentTypes: ['text/plain'],
             ParticipantDetails: {
-                DisplayName: participantDetails.username,
+                DisplayName: customerDisplayName,
             },
+            ...(lastContactId && {
+                PersistentChat: {
+                    RehydrationType: RehydrationType.ENTIRE_PAST_SESSION,
+                    SourceContactId: lastContactId,
+                }
+            }),
+            ...(attributes && {
+                Attributes: attributes,
+            }),
         });
 
         try {
