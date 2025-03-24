@@ -43,7 +43,10 @@ export class ConversationsService {
 
     // Start chat session with Amazon Connect
     const connectSession = await this.amazonConnectService.startChat({
-      customerDisplayName: 'Customer'
+      customerDisplayName: 'Customer',
+      attributes: {
+        customerId: '1',
+      }
     });
 
     const participantConnection = await this.connectParticipantService.createParticipantConnection({
