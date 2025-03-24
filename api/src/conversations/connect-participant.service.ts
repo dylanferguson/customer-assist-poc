@@ -45,10 +45,7 @@ export class ConnectParticipantService {
       const command = new CreateParticipantConnectionCommand(input);
       const response = await this.client.send(command);
 
-      return {
-        websocket: response.Websocket,
-        connectionToken: response.ConnectionCredentials?.ConnectionToken,
-      };
+      return response
     } catch (error) {
       this.logger.error('Failed to create participant connection', error);
       throw error;

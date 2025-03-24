@@ -8,15 +8,18 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { AmazonConnectService } from './amazon-connect.service';
 import { ConnectParticipantService } from './connect-participant.service';
+import { ConnectWebsocketService } from './connect-websocket.service';
 
 @Injectable()
 export class ConversationsService {
   private conversations: Conversation[] = [];
   private messages: Record<string, Message[]> = {};
+  private connectSessions: Record<string, { participantToken: string }> = {};
 
   constructor(
     private readonly amazonConnectService: AmazonConnectService,
     private readonly connectParticipantService: ConnectParticipantService,
+    private readonly connectWebsocketService: ConnectWebsocketService,
   ) { }
 
   async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
@@ -47,7 +50,19 @@ export class ConversationsService {
       participantToken: connectSession.ParticipantToken,
     });
 
-    Logger.log(participantConnection);
+    // Store connection information
+    this.connectSessions[conversation.id] = {
+      participantToken: connectSession.ParticipantToken
+    };
+
+    // Establish websocket connection
+    if (participantConnection.Websocket.Url) {
+      await this.connectWebsocketService.createWebsocketConnection(
+        conversation.id,
+        participantConnection.Websocket.Url
+      );
+      Logger.log(`Websocket connection established for conversation ${conversation.id}`);
+    }
 
     return conversation;
   }
