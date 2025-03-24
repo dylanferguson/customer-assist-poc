@@ -32,6 +32,9 @@ export class ConnectWebsocketService {
             await new Promise((resolve, reject) => {
                 websocket.once('open', () => {
                     this.logger.log(`Websocket connection established for ${conversationId}`);
+                    websocket.send('{"topic": "aws/subscribe", "content": {"topics": ["aws/chat"]}}');
+                    websocket.send('{"topic": "aws/ping"}');
+                    websocket.send('{"topic": "aws/heartbeat"}');
                     resolve(void 0);
                 });
                 websocket.once('error', (error) => reject(error));
