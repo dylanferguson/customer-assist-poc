@@ -38,7 +38,7 @@ export class ConnectParticipantService {
   async createParticipantConnection(config: ParticipantConnectionConfig) {
     try {
       const input: CreateParticipantConnectionCommandInput = {
-        Type: [ConnectionType.WEBSOCKET],
+        Type: [ConnectionType.WEBSOCKET, ConnectionType.CONNECTION_CREDENTIALS],
         ParticipantToken: config.participantToken,
       };
 

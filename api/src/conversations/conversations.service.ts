@@ -14,7 +14,7 @@ import { ConnectWebsocketService } from './connect-websocket.service';
 export class ConversationsService {
   private conversations: Conversation[] = [];
   private messages: Record<string, Message[]> = {};
-  private connectSessions: Record<string, { participantToken: string }> = {};
+  private connectSessions: Record<string, { participantToken: string, connectionToken: string }> = {};
 
   constructor(
     private readonly amazonConnectService: AmazonConnectService,
@@ -52,7 +52,8 @@ export class ConversationsService {
 
     // Store connection information
     this.connectSessions[conversation.id] = {
-      participantToken: connectSession.ParticipantToken
+      participantToken: connectSession.ParticipantToken,
+      connectionToken: participantConnection?.ConnectionCredentials?.ConnectionToken
     };
 
     // Establish websocket connection
@@ -166,7 +167,7 @@ export class ConversationsService {
     };
   }
 
-  createMessage(conversationId: string, createMessageDto: CreateMessageDto): Message {
+  async createMessage(conversationId: string, createMessageDto: CreateMessageDto): Promise<Message> {
     const conversation = this.findOne(conversationId);
     if (!conversation) return null;
 
@@ -188,6 +189,24 @@ export class ConversationsService {
     // Update conversation
     conversation.updatedAt = new Date();
     conversation.unread_count += 1;
+
+    // Send message to Amazon Connect
+    try {
+      const session = this.connectSessions[conversationId];
+
+      if (!session) {
+        throw new Error(`No Connect session found for conversation ${conversationId}`);
+      }
+
+      await this.connectParticipantService.sendMessage({
+        connectionToken: session.connectionToken,
+        content: message.content,
+        contentType: 'text/plain',
+      });
+      Logger.log(`Message sent to Amazon Connect for conversation ${conversationId}`);
+    } catch (error) {
+      Logger.error(`Failed to send message to Amazon Connect: ${error.message}`, error.stack);
+    }
 
     return message;
   }

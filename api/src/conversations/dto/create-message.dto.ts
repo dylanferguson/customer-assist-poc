@@ -6,4 +6,4 @@ const CreateMessageSchema = z.object({
   contentType: z.enum(['plain_text']),
 });
 
-export class CreateMessageDto extends createZodDto(CreateMessageSchema) {} 
+export class CreateMessageDto extends createZodDto(CreateMessageSchema) { } 
