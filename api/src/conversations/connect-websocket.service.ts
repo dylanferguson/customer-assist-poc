@@ -4,6 +4,7 @@ import { WebSocket } from 'ws';
 interface ParticipantConnection {
     conversationId: string;
     websocket: WebSocket;
+    heartbeat: NodeJS.Timeout;
     lastActivity: Date;
 }
 
@@ -32,9 +33,7 @@ export class ConnectWebsocketService {
             await new Promise((resolve, reject) => {
                 websocket.once('open', () => {
                     this.logger.log(`Websocket connection established for ${conversationId}`);
-                    websocket.send('{"topic": "aws/subscribe", "content": {"topics": ["aws/chat"]}}');
-                    websocket.send('{"topic": "aws/ping"}');
-                    websocket.send('{"topic": "aws/heartbeat"}');
+                    websocket.send(JSON.stringify({ topic: "aws/subscribe", content: { topics: ["aws/chat"] } }));
                     resolve(void 0);
                 });
                 websocket.once('error', (error) => reject(error));
@@ -42,6 +41,11 @@ export class ConnectWebsocketService {
                 // Set a timeout in case connection hangs
                 setTimeout(() => reject(new Error('WebSocket connection timeout')), 10000);
             });
+
+            const heartbeatIntervalId = setInterval(() => {
+                websocket.send(JSON.stringify({ topic: "aws/ping" }));
+                websocket.send(JSON.stringify({ topic: "aws/heartbeat" }));
+            }, 30000);
 
             // Set up event handlers
             websocket.on('message', (data) => {
@@ -58,6 +62,7 @@ export class ConnectWebsocketService {
 
             websocket.on('close', (code, reason) => {
                 this.logger.log(`Websocket closed for ${conversationId}: ${code} - ${reason}`);
+                clearInterval(this.participantConnections[conversationId].heartbeat);
                 delete this.participantConnections[conversationId];
             });
 
@@ -65,6 +70,7 @@ export class ConnectWebsocketService {
             this.participantConnections[conversationId] = {
                 conversationId,
                 websocket,
+                heartbeat: heartbeatIntervalId,
                 lastActivity: new Date(),
             };
 
