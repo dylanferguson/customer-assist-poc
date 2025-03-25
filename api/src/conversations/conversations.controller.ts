@@ -1,12 +1,12 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Query, 
-  HttpCode, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  HttpCode,
   HttpStatus,
   NotFoundException
 } from '@nestjs/common';
@@ -18,7 +18,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 
 @Controller('conversations')
 export class ConversationsController {
-  constructor(private readonly conversationsService: ConversationsService) {}
+  constructor(private readonly conversationsService: ConversationsService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
