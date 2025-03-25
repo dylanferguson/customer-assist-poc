@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { SocketProvider } from '@/context/SocketContext'
 import { ChatWindow } from "./ChatWindow"
 import { ChatFab } from "./FAB"
+import { AuthProvider } from "@/context/AuthContext"
 
 const queryClient = new QueryClient()
 
@@ -15,15 +17,19 @@ export function Chat() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="fixed z-50 bottom-4 right-4">
-        {isOpen ? (
-          <ChatWindow toggleChat={toggleChat} />
-        ) : (
-          <ChatFab onClick={toggleChat} />
-        )}
-      </div>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <SocketProvider>
+          <div className="fixed z-50 bottom-4 right-4">
+            {isOpen ? (
+              <ChatWindow toggleChat={toggleChat} />
+            ) : (
+              <ChatFab onClick={toggleChat} />
+            )}
+          </div>
+        </SocketProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

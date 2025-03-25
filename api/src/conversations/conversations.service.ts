@@ -63,7 +63,8 @@ export class ConversationsService {
     if (participantConnection.Websocket.Url) {
       await this.connectWebsocketService.createWebsocketConnection(
         conversation.id,
-        participantConnection.Websocket.Url
+        participantConnection.Websocket.Url,
+        '1'
       );
       Logger.log(`Websocket connection established for conversation ${conversation.id}`);
     }

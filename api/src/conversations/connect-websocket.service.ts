@@ -5,6 +5,7 @@ import { ZodError } from 'zod';
 
 interface ParticipantConnection {
     conversationId: string;
+    userId: string;
     websocket: WebSocket;
     heartbeat: NodeJS.Timeout;
     lastActivity: Date;
@@ -19,9 +20,14 @@ export class ConnectWebsocketService {
      * Creates and maintains a websocket connection for a participant
      * @param conversationId The Amazon Connect participant connection ID
      * @param websocketUrl The websocket URL provided by Amazon Connect
+     * @param userId The ID of the user this connection belongs to
      * @returns The connection ID if successful
      */
-    async createWebsocketConnection(conversationId: string, websocketUrl: string): Promise<string> {
+    async createWebsocketConnection(
+        conversationId: string,
+        websocketUrl: string,
+        userId: string
+    ): Promise<string> {
         try {
             // Close existing connection if it exists
             if (this.participantConnections[conversationId]) {
@@ -86,6 +92,7 @@ export class ConnectWebsocketService {
             // Store the connection
             this.participantConnections[conversationId] = {
                 conversationId,
+                userId,
                 websocket,
                 heartbeat: heartbeatIntervalId,
                 lastActivity: new Date(),
@@ -156,5 +163,16 @@ export class ConnectWebsocketService {
      */
     isConnectionActive(conversationId: string): boolean {
         return !!this.participantConnections[conversationId];
+    }
+
+    /**
+     * Gets all active connections for a specific user
+     * @param userId The user ID to find connections for
+     * @returns Array of connection IDs belonging to the user
+     */
+    getConnectionsByUserId(userId: string): string[] {
+        return Object.values(this.participantConnections)
+            .filter(connection => connection.userId === userId)
+            .map(connection => connection.userId);
     }
 } 

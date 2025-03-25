@@ -1,6 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
-import { v7 as uuidv7 } from 'uuid';
-import { SignJWT } from 'jose';
 
 // Type definitions based on the OpenAPI spec
 export interface Error {
@@ -71,18 +69,25 @@ export interface SendMessageRequest {
 }
 
 /**
+ * Type for token provider callback function
+ */
+export type TokenProvider = () => Promise<string | null>;
+
+/**
  * API client for the Messaging Service
  */
 export class MessagingServiceClient {
     private client: AxiosInstance;
     private baseUrl: string = 'http://localhost:3000/v1';
-    private static JWT_STORAGE_KEY = 'messaging_service_jwt';
+    private getAuthToken: () => Promise<string | null>;
 
     /**
      * Create a new MessagingServiceClient
+     * @param tokenProvider Async callback that returns the authentication token
      * @param config Optional axios configuration
      */
-    constructor(config?: AxiosRequestConfig) {
+    constructor(getAuthToken: () => Promise<string | null>, config?: AxiosRequestConfig) {
+        this.getAuthToken = getAuthToken;
         this.client = axios.create({
             baseURL: this.baseUrl,
             headers: {
@@ -93,45 +98,16 @@ export class MessagingServiceClient {
 
         // Add a request interceptor to include the JWT token
         this.client.interceptors.request.use(async (config) => {
-            const token = await this.getOrCreateJwt();
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
+            const token = await this.getAuthToken();
+            if (!token) {
+                throw new Error('No token provided');
             }
+
+            config.headers['Authorization'] = `Bearer ${token}`;
             return config;
         }, (error: AxiosError) => {
             return Promise.reject(error);
         });
-    }
-
-    /**
-     * Get JWT from localStorage or create a new one with UUID subject
-     * @returns JWT token
-     * @private
-     */
-    private async getOrCreateJwt(): Promise<string> {
-        // NOTE: This is for PoC purposes only. In a production environment,
-        // proper authentication would be implemented instead of generating tokens client-side.
-
-        // Try to get existing token from localStorage
-        const existingToken = localStorage.getItem(MessagingServiceClient.JWT_STORAGE_KEY);
-        if (existingToken) {
-            return existingToken;
-        }
-
-        // Generate a new token with UUID as subject
-        const userId = uuidv7();
-
-        // In a real implementation, the server would sign this token
-        // This is just for demo/PoC purposes
-        const token = await new SignJWT({ sub: userId, name: 'John Doe' })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('7d')
-            .sign(new TextEncoder().encode('demo-secret-key'));
-
-        // Store in localStorage
-        localStorage.setItem(MessagingServiceClient.JWT_STORAGE_KEY, token);
-
-        return token;
     }
 
     /**

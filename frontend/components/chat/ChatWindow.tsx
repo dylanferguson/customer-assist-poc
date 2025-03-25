@@ -4,6 +4,8 @@ import { WelcomeScreen } from "./WelcomeScreen"
 import Inbox from "./Inbox"
 import { useState } from "react"
 import { Conversation } from "./Conversation"
+import { useSocket } from "@/context/SocketContext"
+import { useAuth } from "@/context/AuthContext"
 
 type ChatProps = {
     toggleChat: () => void
@@ -12,8 +14,13 @@ type ChatProps = {
 export const ChatWindow = ({ toggleChat }: ChatProps) => {
     const [showInbox, setShowInbox] = useState(false)
     const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
+    const { connect, isConnected } = useSocket()
 
     const handleStartConversation = () => {
+        // Initialize socket when conversation starts
+        if (!isConnected) {
+            connect()
+        }
         setShowInbox(true)
     }
 
