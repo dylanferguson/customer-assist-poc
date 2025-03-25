@@ -8,6 +8,33 @@ import {
     SubscribeMessage
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { z } from 'zod';
+
+// Define Zod schema for JWT payload
+const JwtPayloadSchema = z.object({
+    sub: z.string().min(1, "User ID cannot be empty"),
+    // Making name optional since we're in test mode
+    name: z.string().optional(),
+    iat: z.number().optional(),
+    exp: z.number().optional(),
+});
+
+type JwtPayload = z.infer<typeof JwtPayloadSchema>;
+
+// Test token decoder - doesn't verify signatures
+const decodeTestToken = (token: string): JwtPayload => {
+    try {
+        // Simple split and decode for test environment
+        const parts = token.split('.');
+        // For test tokens, be lenient about the format (might be 1, 2, or 3 parts)
+        const payloadPart = parts.length > 1 ? parts[1] : parts[0];
+        const payload = JSON.parse(Buffer.from(payloadPart, 'base64').toString());
+        return payload;
+    } catch (e) {
+        // For test purposes, if decoding fails, create a dummy payload
+        return { sub: 'test-user-' + Math.random().toString(36).substring(2, 9) };
+    }
+};
 
 @WebSocketGateway({
     path: '/v1/ws',
@@ -20,6 +47,9 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
 
     private logger: Logger = new Logger(ConversationsGateway.name);
     private readonly AUTH_TIMEOUT = 5000;
+
+    // Map to store userId -> socketId mappings
+    private userSocketMap: Map<string, Set<string>> = new Map();
 
     private isAuthenticated(client: Socket): boolean {
         if (!client.data.authenticated) {
@@ -48,8 +78,58 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
         this.logger.debug(`Number of connected clients: ${sockets.size}`);
     }
 
-    handleDisconnect(client: any) {
-        this.logger.log(`Cliend id:${client.id} disconnected`);
+    handleDisconnect(client: Socket) {
+        // Remove the client from userSocketMap when they disconnect
+        if (client.data.userId) {
+            this.removeUserSocket(client.data.userId, client.id);
+        }
+        this.logger.log(`Client id:${client.id} disconnected`);
+    }
+
+    // Add a socket to the user mapping
+    private addUserSocket(userId: string, socketId: string): void {
+        if (!this.userSocketMap.has(userId)) {
+            this.userSocketMap.set(userId, new Set());
+        }
+        this.userSocketMap.get(userId).add(socketId);
+        this.logger.debug(`Socket ${socketId} added to user ${userId}. User now has ${this.userSocketMap.get(userId).size} connections.`);
+    }
+
+    // Remove a socket from the user mapping
+    private removeUserSocket(userId: string, socketId: string): void {
+        if (!this.userSocketMap.has(userId)) return;
+
+        const userSockets = this.userSocketMap.get(userId);
+        userSockets.delete(socketId);
+
+        if (userSockets.size === 0) {
+            this.userSocketMap.delete(userId);
+            this.logger.debug(`User ${userId} has no active connections, removed from map.`);
+        } else {
+            this.logger.debug(`Socket ${socketId} removed from user ${userId}. User still has ${userSockets.size} connections.`);
+        }
+    }
+
+    // Method to send message to a specific user by their userId
+    public sendMessageToUser(userId: string, event: string, data: any): boolean {
+        if (!this.userSocketMap.has(userId)) {
+            this.logger.warn(`No active connections for user ${userId}`);
+            return false;
+        }
+
+        const userSocketIds = this.userSocketMap.get(userId);
+        let delivered = false;
+
+        for (const socketId of userSocketIds) {
+            const socket = this.server.sockets.sockets.get(socketId);
+            if (socket) {
+                socket.emit(event, data);
+                delivered = true;
+            }
+        }
+
+        this.logger.debug(`Message "${event}" sent to user ${userId} on ${delivered ? 'some' : 'no'} active connections.`);
+        return delivered;
     }
 
     @SubscribeMessage("ping")
@@ -69,18 +149,47 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
     @SubscribeMessage('authenticate')
     handleAuthentication(client: Socket, token: string) {
         try {
-            // TODO: Add your JWT verification logic here
-            // jwt.verify(token, process.env.JWT_SECRET);
+            // For test application, be lenient with token validation
+            const tokenSchema = z.string().optional();
+            const validatedToken = tokenSchema.parse(token) || 'test-token';
+
+            // Decode the token in a test-friendly way
+            let payload: JwtPayload;
+            try {
+                payload = decodeTestToken(validatedToken);
+                // Validate payload with relaxed rules for testing
+                payload = JwtPayloadSchema.parse(payload);
+            } catch (parseError) {
+                // For testing, create a fallback user ID if parsing fails
+                this.logger.warn(`Token parsing failed, using test fallback: ${parseError.message}`);
+                payload = { sub: `test-${client.id}` };
+            }
+
+            // Map the sub claim to the socket
+            client.data.userId = payload.sub;
+
+            // Add the socket to the user mapping
+            this.addUserSocket(client.data.userId, client.id);
 
             // Clear the timeout since auth was successful
             clearTimeout(client.data.authTimeoutId);
             client.data.authenticated = true;
 
+            this.logger.debug(`Client ${client.id} authenticated with user ID: ${client.data.userId}`);
             return { event: 'authenticated', data: { success: true } };
         } catch (error) {
-            this.logger.error(`Authentication failed for client ${client.id}: ${error.message}`);
-            client.disconnect(true);
-            return { event: 'authenticated', data: { success: false, error: 'Invalid token' } };
+            // Even in test mode, log the error but don't disconnect
+            this.logger.error(`Authentication issue for client ${client.id}: ${error.message}`);
+
+            // For testing, authenticate anyway with a fallback ID
+            const fallbackUserId = `test-${client.id}`;
+            client.data.userId = fallbackUserId;
+            this.addUserSocket(fallbackUserId, client.id);
+            clearTimeout(client.data.authTimeoutId);
+            client.data.authenticated = true;
+
+            this.logger.warn(`Using fallback authentication for client ${client.id}`);
+            return { event: 'authenticated', data: { success: true, warning: 'Using fallback authentication' } };
         }
     }
 
