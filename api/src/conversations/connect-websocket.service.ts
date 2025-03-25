@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WebSocket } from 'ws';
+import { websocketMessageSchema } from './schemas/websocket-message.schema';
+import { ZodError } from 'zod';
 
 interface ParticipantConnection {
     conversationId: string;
@@ -49,19 +51,34 @@ export class ConnectWebsocketService {
 
             // Set up event handlers
             websocket.on('message', (data) => {
-                this.logger.debug(`Received message for ${conversationId}: ${data}`);
-                // Update last activity timestamp
-                if (this.participantConnections[conversationId]) {
-                    this.participantConnections[conversationId].lastActivity = new Date();
+                try {
+                    const rawMessage = JSON.parse(data.toString());
+                    this.logger.log(data);
+                    const message = websocketMessageSchema.parse(rawMessage);
+
+                    this.logger.debug(`Received validated message for ${conversationId}: ${JSON.stringify(message)}`);
+
+                    // Update last activity timestamp
+                    if (this.participantConnections[conversationId]) {
+                        this.participantConnections[conversationId].lastActivity = new Date();
+                    }
+                } catch (error) {
+                    if (error instanceof ZodError) {
+                        this.logger.error(`Invalid message format: ${JSON.stringify(error)}`);
+                    } else if (error instanceof SyntaxError) {
+                        this.logger.error(`Invalid JSON: ${error.message}`);
+                    } else {
+                        this.logger.error(`Unexpected error processing message: ${error.message}`);
+                    }
                 }
             });
 
             websocket.on('error', (error) => {
-                this.logger.error(`Websocket error for ${conversationId}: ${error.message}`);
+                this.logger.error(`Websocket error for ${conversationId}: ${error.message} `);
             });
 
             websocket.on('close', (code, reason) => {
-                this.logger.log(`Websocket closed for ${conversationId}: ${code} - ${reason}`);
+                this.logger.log(`Websocket closed for ${conversationId}: ${code} - ${reason} `);
                 clearInterval(this.participantConnections[conversationId].heartbeat);
                 delete this.participantConnections[conversationId];
             });
@@ -76,7 +93,7 @@ export class ConnectWebsocketService {
 
             return conversationId;
         } catch (error) {
-            this.logger.error(`Failed to create websocket connection: ${error.message}`);
+            this.logger.error(`Failed to create websocket connection: ${error.message} `);
             throw error;
         }
     }
@@ -100,7 +117,7 @@ export class ConnectWebsocketService {
             connection.lastActivity = new Date();
             return true;
         } catch (error) {
-            this.logger.error(`Failed to send message: ${error.message}`);
+            this.logger.error(`Failed to send message: ${error.message} `);
             return false;
         }
     }
@@ -118,7 +135,7 @@ export class ConnectWebsocketService {
         try {
             connection.websocket.close();
         } catch (error) {
-            this.logger.error(`Error closing websocket: ${error.message}`);
+            this.logger.error(`Error closing websocket: ${error.message} `);
         } finally {
             delete this.participantConnections[conversationId];
         }
