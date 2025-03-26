@@ -27,7 +27,7 @@ const baseChatMessageSchema = z.object({
     ParticipantId: z.string(),
 });
 
-const EVENT_CONTENT_TYPE = {
+export const EVENT_CONTENT_TYPE = {
     TYPING: "application/vnd.amazonaws.connect.event.typing",
     READ_RECEIPT: "application/vnd.amazonaws.connect.event.message.read",
     DELIVERED_RECEIPT: "application/vnd.amazonaws.connect.event.message.delivered",

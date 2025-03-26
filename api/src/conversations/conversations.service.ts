@@ -10,8 +10,8 @@ import { AmazonConnectService } from './amazon-connect.service';
 import { ConnectParticipantService } from './connect-participant.service';
 import { ConnectWebsocketService } from './connect-websocket.service';
 import { ConversationsGateway } from './conversations.gateway';
-import { ConnectMessage } from './schemas/connect-message.schema';
-
+import { ConnectMessage, EVENT_CONTENT_TYPE } from './schemas/connect-message.schema';
+import { TypingEvent } from './entities/websocket.entity';
 @Injectable()
 export class ConversationsService {
   private conversations: Conversation[] = [];
@@ -230,37 +230,47 @@ export class ConversationsService {
   }): void {
     const { conversationId, connectMessage, userId } = payload;
     const message = connectMessage.content;
+    const isAgentTypingEvent = message.Type === 'EVENT' && message.ParticipantRole === 'AGENT' && message.ContentType === EVENT_CONTENT_TYPE.TYPING;
+    const isNonCustomerMessage = message.Type === 'MESSAGE' && message.ParticipantRole !== 'CUSTOMER';
 
-    if (message.Type === 'EVENT' || (message.Type === 'MESSAGE' && message.ParticipantRole === 'CUSTOMER')) {
+    if (isAgentTypingEvent) {
+      const typingEvent: TypingEvent = {
+        participantType: message.ParticipantRole as 'CUSTOMER' | 'AGENT' | 'CUSTOM_BOT',
+        participantName: message.ParticipantId,
+      };
+
+      this.conversationsGateway.sendMessageToUser(userId, { type: 'typing', data: typingEvent });
       return;
     }
 
-    // Transform the Connect message to internal Message format
-    const internalMessage: Message = {
-      conversationId,
-      id: `msg_${uuidv4()}`,
-      content: message.Content,
-      contentType: message.ContentType,
-      createdAt: new Date(connectMessage.content.AbsoluteTime),
-      participantRole: message.ParticipantRole as ParticipantRole,
-      participantName: 'Agent',
-    };
+    if (isNonCustomerMessage) {
+      // Transform the Connect message to internal Message format
+      const internalMessage: Message = {
+        conversationId,
+        id: `msg_${uuidv4()}`,
+        content: message.Content,
+        contentType: message.ContentType,
+        createdAt: new Date(connectMessage.content.AbsoluteTime),
+        participantRole: message.ParticipantRole as ParticipantRole,
+        participantName: 'Agent',
+      };
 
-    // Store the transformed message
-    if (!this.messages[conversationId]) {
-      this.messages[conversationId] = [];
+      // Store the transformed message
+      if (!this.messages[conversationId]) {
+        this.messages[conversationId] = [];
+      }
+      this.messages[conversationId].push(internalMessage);
+
+      // Update conversation metadata
+      const conversation = this.findOne(conversationId);
+      if (conversation) {
+        conversation.updatedAt = new Date();
+        conversation.unread_count += 1;
+      }
+
+      // Forward the transformed message to connected users via the gateway
+      this.conversationsGateway.sendMessageToUser(userId, { type: 'message', data: internalMessage });
     }
-    this.messages[conversationId].push(internalMessage);
-
-    // Update conversation metadata
-    const conversation = this.findOne(conversationId);
-    if (conversation) {
-      conversation.updatedAt = new Date();
-      conversation.unread_count += 1;
-    }
-
-    // Forward the transformed message to connected users via the gateway
-    this.conversationsGateway.sendMessageToUser(userId, 'message', internalMessage);
 
     this.logger.log(`Processed incoming Connect message for conversation ${conversationId}`);
   }

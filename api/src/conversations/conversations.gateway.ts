@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
 import { Message } from './entities/message.entity';
+import { TypingEvent } from './entities/websocket.entity';
 
 // Define Zod schema for JWT payload
 const JwtPayloadSchema = z.object({
@@ -37,6 +38,15 @@ const decodeTestToken = (token: string): JwtPayload => {
         return { sub: 'test-user-' + Math.random().toString(36).substring(2, 9) };
     }
 };
+
+type WebSocketEvent = {
+    type: 'message';
+    data: Message;
+} | {
+    type: 'typing';
+    data: TypingEvent;
+};
+
 
 @WebSocketGateway({
     path: '/v1/ws',
@@ -114,7 +124,6 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
         this.logger.log(`Client id:${client.id} disconnected`);
     }
 
-    // Add a socket to the user mapping
     private addUserSocket(userId: string, socketId: string): void {
         if (!this.userConnections.has(userId)) {
             this.userConnections.set(userId, new Set());
@@ -123,7 +132,6 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
         this.logger.log(`Socket ${socketId} added to user ${userId}. User now has ${this.userConnections.get(userId).size} connections.`);
     }
 
-    // Remove a socket from the user mapping
     private removeUserSocket(userId: string, socketId: string): void {
         if (!this.userConnections.has(userId)) return;
 
@@ -138,8 +146,7 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
 
-    // Method to send message to a specific user by their userId
-    public sendMessageToUser(userId: string, event: 'message', data: any): boolean {
+    public sendMessageToUser(userId: string, { type, data }: WebSocketEvent): boolean {
         if (!this.userConnections.has(userId)) {
             this.logger.warn(`No active connections for user ${userId}`);
             return false;
@@ -151,12 +158,12 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
         for (const socketId of userSocketIds) {
             const socket = this.server.sockets.sockets.get(socketId);
             if (socket) {
-                socket.emit(event, data);
+                socket.emit(type, data);
                 delivered = true;
             }
         }
 
-        this.logger.debug(`Message "${event}" sent to user ${userId} on ${delivered ? 'some' : 'no'} active connections.`);
+        this.logger.debug(`Message "${type}" sent to user ${userId} on ${delivered ? 'some' : 'no'} active connections.`);
         return delivered;
     }
 

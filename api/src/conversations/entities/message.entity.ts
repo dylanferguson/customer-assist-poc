@@ -6,7 +6,7 @@ export enum ParticipantRole {
   SUPERVISOR = 'SUPERVISOR',
 }
 
-export class Message {
+export interface Message {
   id: string;
   conversationId: string;
   content: string;
