@@ -50,7 +50,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                                 {conversation.title}
                             </h3>
                         </div>
-                        <p className={`text-sm truncate ${conversation.unread_count > 0 ? 'text-gray-800' : 'text-gray-500'}`}>
+                        <p className={`text-sm truncate min-w-0 max-w-2/5 ${conversation.unread_count > 0 ? 'text-gray-800' : 'text-gray-500'}`}>
                             {conversation.lastMessage?.content || 'Start a new conversation'}
                         </p>
                     </div>

@@ -207,6 +207,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                             const lastMessage = index === messages.length - 1;
                             // Check if this is the last message from this sender in a consecutive group
                             const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
+                            const isFirstInGroup = !previousMessage || previousMessage.participantRole !== message.participantRole;
 
                             return (
                                 <div
@@ -215,11 +216,12 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                     role="article"
                                     aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
                                 >
+
                                     <div
                                         className={`grid grid-cols-[auto_1fr] gap-2`}
                                     >
                                         <div className={'w-10'}>
-                                            {message.participantRole !== 'CUSTOMER' && !isSameSender && (
+                                            {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
                                                 <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
                                                     {message.participantName === 'AGENT' ? (
                                                         <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
@@ -229,24 +231,31 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
-                                            <div
-                                                tabIndex={0}
-                                                className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
-                                                    ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
-                                                    : 'bg-gray-100 text-black'
-                                                    }`}
-                                            >
-                                                <div className="break-words">{message.content}</div>
-                                                <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
-                                                    {lastMessage && message.participantRole !== 'CUSTOMER' && (
-                                                        <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
-                                                    )}
-                                                    {message.error && (
-                                                        <span className="flex items-center ml-2 text-red-400">
-                                                            Not delivered
-                                                        </span>
-                                                    )}
+                                        <div>
+                                            {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
+                                                <div className="mb-1 text-xs text-gray-500">
+                                                    {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
+                                                </div>
+                                            )}
+                                            <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
+                                                <div
+                                                    tabIndex={0}
+                                                    className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
+                                                        ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                                        : 'bg-gray-100 text-black'
+                                                        }`}
+                                                >
+                                                    <div className="break-words">{message.content}</div>
+                                                    <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                        {lastMessage && message.participantRole !== 'CUSTOMER' && (
+                                                            <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                                        )}
+                                                        {message.error && (
+                                                            <span className="flex items-center ml-2 text-red-400">
+                                                                Not delivered
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
