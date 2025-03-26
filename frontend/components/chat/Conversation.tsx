@@ -197,46 +197,61 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                         {format(new Date(conversation.createdAt), "dd MMMM, yyyy, h:mmaaa")}
                     </div>
 
-                    <div className="space-y-4">
-                        {messages.map((message) => (
-                            <div
-                                key={message.id}
-                                className="space-y-1"
-                                role="article"
-                                aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
-                            >
+                    <div className="space-y-0.5">
+                        {messages.map((message, index) => {
+                            // Check if this message is from the same sender as the previous one
+                            const previousMessage = index > 0 ? messages[index - 1] : null;
+                            const isSameSender = previousMessage && previousMessage.participantRole === message.participantRole;
+
+                            // Check if this is the last message from this sender in a consecutive group
+                            const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                            const lastMessage = index === messages.length - 1;
+                            const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
+
+                            return (
                                 <div
-                                    className={`flex items-start gap-2 ${message.participantRole === 'CUSTOMER' ? 'flex-row-reverse' : 'flex-row'}`}
+                                    key={message.id}
+                                    role="article"
+                                    aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
                                 >
-                                    {message.participantRole !== 'CUSTOMER' && (
-                                        <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
-                                            {message.participantName === 'AGENT' ? (
-                                                <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                            ) : (
-                                                <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                            )}
-                                        </div>
-                                    )}
                                     <div
-                                        tabIndex={0}
-                                        className={`max-w-[70%] rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${message.participantRole === 'CUSTOMER'
-                                            ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
-                                            : 'bg-gray-100 text-black'
-                                            }`}
+                                        className={`flex items-start gap-2 ${message.participantRole === 'CUSTOMER' ? 'flex-row-reverse' : 'flex-row'}`}
                                     >
-                                        <div>{message.content}</div>
-                                        <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
-                                            <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
-                                            {message.error && (
-                                                <span className="flex items-center ml-2 text-red-400">
-                                                    Not delivered
-                                                </span>
-                                            )}
+                                        {message.participantRole !== 'CUSTOMER' && !isSameSender && (
+                                            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
+                                                {message.participantName === 'AGENT' ? (
+                                                    <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                                ) : (
+                                                    <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                                )}
+                                            </div>
+                                        )}
+                                        {message.participantRole !== 'CUSTOMER' && isSameSender && (
+                                            <div className="w-10 h-10"></div>
+                                        )}
+                                        <div
+                                            tabIndex={0}
+                                            className={`rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${message.participantRole === 'CUSTOMER'
+                                                ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                                : 'bg-gray-100 text-black'
+                                                }`}
+                                        >
+                                            <div className="break-words">{message.content}</div>
+                                            <div className="max-w-[70%] text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                {lastMessage && message.participantRole !== 'CUSTOMER' && (
+                                                    <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                                )}
+                                                {message.error && (
+                                                    <span className="flex items-center ml-2 text-red-400">
+                                                        Not delivered
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </div>
                 </div>
