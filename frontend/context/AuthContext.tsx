@@ -41,12 +41,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         // Generate a new token with UUID as subject
-        const userId = uuidv7();
+        // const userId = uuidv7();
 
         try {
             // In a real implementation, the server would sign this token
             // This is just for demo/PoC purposes
-            const newToken = await new SignJWT({ sub: userId, name: 'John Doe' })
+            const newToken = await new SignJWT({ sub: '1', name: 'John Doe' })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setExpirationTime('7d')
                 .sign(new TextEncoder().encode('demo-secret-key'));

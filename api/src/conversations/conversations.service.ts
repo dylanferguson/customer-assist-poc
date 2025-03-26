@@ -9,18 +9,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { AmazonConnectService } from './amazon-connect.service';
 import { ConnectParticipantService } from './connect-participant.service';
 import { ConnectWebsocketService } from './connect-websocket.service';
+import { ConversationsGateway } from './conversations.gateway';
+import { ConnectMessage } from './schemas/connect-message.schema';
 
 @Injectable()
 export class ConversationsService {
   private conversations: Conversation[] = [];
   private messages: Record<string, Message[]> = {};
   private connectSessions: Record<string, { participantToken: string, connectionToken: string }> = {};
+  private logger = new Logger(ConversationsService.name);
 
   constructor(
     private readonly amazonConnectService: AmazonConnectService,
     private readonly connectParticipantService: ConnectParticipantService,
     private readonly connectWebsocketService: ConnectWebsocketService,
-  ) { }
+    private readonly conversationsGateway: ConversationsGateway,
+  ) {
+  }
 
   async createConversation(createConversationDto: CreateConversationDto): Promise<Conversation> {
     const now = new Date();
@@ -64,9 +69,11 @@ export class ConversationsService {
       await this.connectWebsocketService.createWebsocketConnection(
         conversation.id,
         participantConnection.Websocket.Url,
-        '1'
+        (connectMessage) => {
+          this.handleConnectMessage({ conversationId: conversation.id, connectMessage, userId: '1' });
+        }
       );
-      Logger.log(`Websocket connection established for conversation ${conversation.id}`);
+      this.logger.log(`Websocket connection established for conversation ${conversation.id}`);
     }
 
     return conversation;
@@ -207,11 +214,52 @@ export class ConversationsService {
         content: message.content,
         contentType: 'text/plain',
       });
-      Logger.log(`Message sent to Amazon Connect for conversation ${conversationId}`);
+      this.logger.log(`Message sent to Amazon Connect for conversation ${conversationId}`);
     } catch (error) {
-      Logger.error(`Failed to send message to Amazon Connect: ${error.message}`, error.stack);
+      this.logger.error(`Failed to send message to Amazon Connect: ${error.message}`, error.stack);
     }
 
     return message;
+  }
+
+  private handleConnectMessage(payload: {
+    conversationId: string,
+    connectMessage: ConnectMessage,
+    userId: string
+  }): void {
+    const { conversationId, connectMessage, userId } = payload;
+    const message = connectMessage.content;
+
+    if (message.Type === 'EVENT' || (message.Type === 'MESSAGE' && message.ParticipantRole === 'CUSTOMER')) {
+      return;
+    }
+
+    // Transform the Connect message to internal Message format
+    const internalMessage: Message = {
+      id: `msg_${uuidv4()}`,
+      content: message.Content,
+      contentType: message.ContentType,
+      createdAt: new Date(connectMessage.content.AbsoluteTime),
+      participantRole: message.ParticipantRole as ParticipantRole,
+      participantName: 'Agent',
+    };
+
+    // Store the transformed message
+    if (!this.messages[conversationId]) {
+      this.messages[conversationId] = [];
+    }
+    this.messages[conversationId].push(internalMessage);
+
+    // Update conversation metadata
+    const conversation = this.findOne(conversationId);
+    if (conversation) {
+      conversation.updatedAt = new Date();
+      conversation.unread_count += 1;
+    }
+
+    // Forward the transformed message to connected users via the gateway
+    this.conversationsGateway.sendMessageToUser(userId, 'message', internalMessage);
+
+    this.logger.log(`Processed incoming Connect message for conversation ${conversationId}`);
   }
 } 

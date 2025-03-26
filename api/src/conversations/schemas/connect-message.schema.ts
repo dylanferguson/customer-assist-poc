@@ -82,7 +82,7 @@ const chatMessageTypeSchema = z.discriminatedUnion('Type', [
     messageChatMessageSchema,
 ]);
 
-export const chatMessageSchema = z.object({
+export const connectMessageSchema = z.object({
     topic: z.literal('aws/chat'),
     contentType: z.literal('application/json'),
     content: z.preprocess(
@@ -91,14 +91,14 @@ export const chatMessageSchema = z.object({
     )
 });
 
-export const websocketMessageSchema = z.discriminatedUnion('topic', [
+export const connectWebsockMessageSchema = z.discriminatedUnion('topic', [
     subscribeMessageSchema,
     heartbeatMessageSchema,
     pingMessageSchema,
-    chatMessageSchema,
+    connectMessageSchema,
 ]);
 
-export type WebSocketMessage = z.infer<typeof websocketMessageSchema>;
-export type ChatMessage = z.infer<typeof chatMessageSchema>;
+export type WebSocketMessage = z.infer<typeof connectWebsockMessageSchema>;
+export type ConnectMessage = z.infer<typeof connectMessageSchema>;
 export type HeartbeatMessage = z.infer<typeof heartbeatMessageSchema>;
 export type PingMessage = z.infer<typeof pingMessageSchema>; 

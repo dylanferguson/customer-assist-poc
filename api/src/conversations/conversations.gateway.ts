@@ -5,10 +5,12 @@ import {
     OnGatewayDisconnect,
     WebSocketServer,
     OnGatewayInit,
-    SubscribeMessage
+    SubscribeMessage,
+    ConnectedSocket
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
+import { Message } from './entities/message.entity';
 
 // Define Zod schema for JWT payload
 const JwtPayloadSchema = z.object({
@@ -49,7 +51,9 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
     private readonly AUTH_TIMEOUT = 5000;
 
     // Map to store userId -> socketId mappings
-    private userSocketMap: Map<string, Set<string>> = new Map();
+    private userConnections: Map<string, Set<string>> = new Map();
+    private socketToUser: Map<string, string> = new Map();
+    private conversationSubscriptions: Map<string, Set<string>> = new Map();
 
     private isAuthenticated(client: Socket): boolean {
         if (!client.data.authenticated) {
@@ -58,6 +62,10 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
             return false;
         }
         return true;
+    }
+
+    afterInit() {
+        this.logger.log('WebSocket Gateway initialized');
     }
 
     handleConnection(client: Socket, ...args: any[]) {
@@ -79,31 +87,51 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
     }
 
     handleDisconnect(client: Socket) {
-        // Remove the client from userSocketMap when they disconnect
-        if (client.data.userId) {
-            this.removeUserSocket(client.data.userId, client.id);
+        const userId = this.socketToUser.get(client.id);
+        if (userId) {
+            // Remove from user connections
+            const userSockets = this.userConnections.get(userId);
+            if (userSockets) {
+                userSockets.delete(client.id);
+                if (userSockets.size === 0) {
+                    this.userConnections.delete(userId);
+                }
+            }
+
+            // Remove from conversation subscriptions
+            for (const [conversationId, sockets] of this.conversationSubscriptions.entries()) {
+                if (sockets.has(client.id)) {
+                    sockets.delete(client.id);
+                    if (sockets.size === 0) {
+                        this.conversationSubscriptions.delete(conversationId);
+                    }
+                }
+            }
+
+            this.socketToUser.delete(client.id);
         }
+
         this.logger.log(`Client id:${client.id} disconnected`);
     }
 
     // Add a socket to the user mapping
     private addUserSocket(userId: string, socketId: string): void {
-        if (!this.userSocketMap.has(userId)) {
-            this.userSocketMap.set(userId, new Set());
+        if (!this.userConnections.has(userId)) {
+            this.userConnections.set(userId, new Set());
         }
-        this.userSocketMap.get(userId).add(socketId);
-        this.logger.debug(`Socket ${socketId} added to user ${userId}. User now has ${this.userSocketMap.get(userId).size} connections.`);
+        this.userConnections.get(userId).add(socketId);
+        this.logger.log(`Socket ${socketId} added to user ${userId}. User now has ${this.userConnections.get(userId).size} connections.`);
     }
 
     // Remove a socket from the user mapping
     private removeUserSocket(userId: string, socketId: string): void {
-        if (!this.userSocketMap.has(userId)) return;
+        if (!this.userConnections.has(userId)) return;
 
-        const userSockets = this.userSocketMap.get(userId);
+        const userSockets = this.userConnections.get(userId);
         userSockets.delete(socketId);
 
         if (userSockets.size === 0) {
-            this.userSocketMap.delete(userId);
+            this.userConnections.delete(userId);
             this.logger.debug(`User ${userId} has no active connections, removed from map.`);
         } else {
             this.logger.debug(`Socket ${socketId} removed from user ${userId}. User still has ${userSockets.size} connections.`);
@@ -111,13 +139,13 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
     }
 
     // Method to send message to a specific user by their userId
-    public sendMessageToUser(userId: string, event: string, data: any): boolean {
-        if (!this.userSocketMap.has(userId)) {
+    public sendMessageToUser(userId: string, event: 'message', data: any): boolean {
+        if (!this.userConnections.has(userId)) {
             this.logger.warn(`No active connections for user ${userId}`);
             return false;
         }
 
-        const userSocketIds = this.userSocketMap.get(userId);
+        const userSocketIds = this.userConnections.get(userId);
         let delivered = false;
 
         for (const socketId of userSocketIds) {
@@ -154,16 +182,11 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
             const validatedToken = tokenSchema.parse(token) || 'test-token';
 
             // Decode the token in a test-friendly way
-            let payload: JwtPayload;
-            try {
-                payload = decodeTestToken(validatedToken);
-                // Validate payload with relaxed rules for testing
-                payload = JwtPayloadSchema.parse(payload);
-            } catch (parseError) {
-                // For testing, create a fallback user ID if parsing fails
-                this.logger.warn(`Token parsing failed, using test fallback: ${parseError.message}`);
-                payload = { sub: `test-${client.id}` };
-            }
+            let payload = decodeTestToken(validatedToken);
+            // Validate payload with relaxed rules for testing
+            payload = JwtPayloadSchema.parse(payload);
+
+            this.logger.log(`Successfully parsed token from user ${payload.sub}`);
 
             // Map the sub claim to the socket
             // client.data.userId = payload.sub;
@@ -191,9 +214,5 @@ export class ConversationsGateway implements OnGatewayInit, OnGatewayConnection,
                 }
             };
         }
-    }
-
-    afterInit() {
-        this.logger.log('WebSocket Gateway initialized');
     }
 } 

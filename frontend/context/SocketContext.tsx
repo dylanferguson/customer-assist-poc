@@ -52,8 +52,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
                 authenticateSocket()
             })
 
+            socketRef.current.on('message', (message) => {
+                console.log('Received message:', message)
+            })
+
             // Handle authentication response from server
-            socketRef.current.on('authentication_response', (response) => {
+            socketRef.current.on('authenticated', (response) => {
                 if (response.success) {
                     setSocketAuthenticated(true)
                     console.log('Socket authenticated successfully')

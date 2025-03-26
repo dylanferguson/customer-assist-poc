@@ -40,7 +40,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <span className="block mb-1 text-xs text-gray-500">
-                            {conversation.lastMessage ?
+                            {conversation.lastMessage?.createdAt ?
                                 format(new Date(conversation.lastMessage.createdAt), 'EEE h:mma') :
                                 'No messages'
                             }

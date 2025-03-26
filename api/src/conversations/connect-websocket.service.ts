@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WebSocket } from 'ws';
-import { websocketMessageSchema } from './schemas/websocket-message.schema';
+import { connectWebsockMessageSchema, ConnectMessage } from './schemas/connect-message.schema';
 import { ZodError } from 'zod';
 
 interface ParticipantConnection {
     conversationId: string;
-    userId: string;
     websocket: WebSocket;
     heartbeat: NodeJS.Timeout;
     lastActivity: Date;
@@ -26,8 +25,8 @@ export class ConnectWebsocketService {
     async createWebsocketConnection(
         conversationId: string,
         websocketUrl: string,
-        userId: string
-    ): Promise<string> {
+        onNewMessage: (message: ConnectMessage) => void
+    ): Promise<void> {
         try {
             // Close existing connection if it exists
             if (this.participantConnections[conversationId]) {
@@ -60,13 +59,18 @@ export class ConnectWebsocketService {
                 try {
                     const rawMessage = JSON.parse(data.toString());
                     this.logger.log(data);
-                    const message = websocketMessageSchema.parse(rawMessage);
+                    const message = connectWebsockMessageSchema.parse(rawMessage);
 
                     this.logger.debug(`Received validated message for ${conversationId}: ${JSON.stringify(message)}`);
 
                     // Update last activity timestamp
                     if (this.participantConnections[conversationId]) {
                         this.participantConnections[conversationId].lastActivity = new Date();
+                    }
+
+                    // Emit event for other services to consume
+                    if (message.topic === 'aws/chat') {
+                        onNewMessage(message);
                     }
                 } catch (error) {
                     if (error instanceof ZodError) {
@@ -92,13 +96,10 @@ export class ConnectWebsocketService {
             // Store the connection
             this.participantConnections[conversationId] = {
                 conversationId,
-                userId,
                 websocket,
                 heartbeat: heartbeatIntervalId,
                 lastActivity: new Date(),
             };
-
-            return conversationId;
         } catch (error) {
             this.logger.error(`Failed to create websocket connection: ${error.message} `);
             throw error;
@@ -164,15 +165,4 @@ export class ConnectWebsocketService {
     isConnectionActive(conversationId: string): boolean {
         return !!this.participantConnections[conversationId];
     }
-
-    /**
-     * Gets all active connections for a specific user
-     * @param userId The user ID to find connections for
-     * @returns Array of connection IDs belonging to the user
-     */
-    getConnectionsByUserId(userId: string): string[] {
-        return Object.values(this.participantConnections)
-            .filter(connection => connection.userId === userId)
-            .map(connection => connection.userId);
-    }
-} 
+}
