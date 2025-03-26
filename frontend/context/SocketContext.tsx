@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
+import { Message } from '@/api/messagingServiceClient'
 
 interface SocketContextType {
     socket: Socket | null
@@ -8,6 +9,8 @@ interface SocketContextType {
     socketAuthenticated: boolean
     connect: () => void
     disconnect: () => void
+    subscribeToConversation: (conversationId: string, callback: (message: any) => void) => () => void
+    unsubscribeFromConversation: (conversationId: string) => void
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -16,6 +19,8 @@ const SocketContext = createContext<SocketContextType>({
     socketAuthenticated: false,
     connect: () => { },
     disconnect: () => { },
+    subscribeToConversation: () => () => { },
+    unsubscribeFromConversation: () => { },
 })
 
 export const useSocket = () => useContext(SocketContext)
@@ -28,6 +33,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const socketRef = useRef<Socket | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [socketAuthenticated, setSocketAuthenticated] = useState(false)
+
+    // Keep track of conversation subscriptions
+    const conversationSubscribersRef = useRef<{
+        [conversationId: string]: Set<(message: any) => void>
+    }>({})
 
     // Get auth state directly from context
     const { getToken, token } = useAuth()
@@ -54,6 +64,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
             socketRef.current.on('message', (message) => {
                 console.log('Received message:', message)
+                if (message.conversationId) {
+                    const conversationId = message.conversationId;
+                    const subscribers = conversationSubscribersRef.current[conversationId];
+                    if (subscribers) {
+                        subscribers.forEach(callback => callback(message));
+                    }
+                }
             })
 
             // Handle authentication response from server
@@ -88,6 +105,41 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         }
     }
 
+    // Subscribe to messages for a specific conversation
+    const subscribeToConversation = (conversationId: string, callback: (message: Message) => void) => {
+        if (!conversationSubscribersRef.current[conversationId]) {
+            conversationSubscribersRef.current[conversationId] = new Set()
+        }
+
+        conversationSubscribersRef.current[conversationId].add(callback)
+        console.log(`Subscribed to messages for conversation ${conversationId}`)
+
+        // Return unsubscribe function
+        return () => {
+            unsubscribeFromConversation(conversationId, callback)
+        }
+    }
+
+    // Unsubscribe from messages for a specific conversation
+    const unsubscribeFromConversation = (conversationId: string, callback?: (message: Message) => void) => {
+        if (!conversationSubscribersRef.current[conversationId]) return
+
+        if (callback) {
+            // Remove specific callback
+            conversationSubscribersRef.current[conversationId].delete(callback)
+            console.log(`Unsubscribed specific callback from conversation ${conversationId}`)
+
+            // Clean up empty set
+            if (conversationSubscribersRef.current[conversationId].size === 0) {
+                delete conversationSubscribersRef.current[conversationId]
+            }
+        } else {
+            // Remove all callbacks for this conversation
+            delete conversationSubscribersRef.current[conversationId]
+            console.log(`Unsubscribed all callbacks from conversation ${conversationId}`)
+        }
+    }
+
     // Re-authenticate when token changes or connection status changes
     useEffect(() => {
         if (isConnected && token) {
@@ -111,7 +163,9 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
             isConnected,
             socketAuthenticated,
             connect,
-            disconnect
+            disconnect,
+            subscribeToConversation,
+            unsubscribeFromConversation
         }}>
             {children}
         </SocketContext.Provider>

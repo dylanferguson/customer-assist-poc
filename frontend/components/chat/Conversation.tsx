@@ -3,18 +3,25 @@ import { Spinner } from '../ui/spinner';
 import { format } from 'date-fns';
 import { Bot, UserRound, Send } from 'lucide-react';
 import { useMessagingService } from '../../hooks/useMessagingService';
+import { useSocket } from '../../context/SocketContext';
+import { Message, MessageList } from '../../api/messagingServiceClient';
 
+// Type for message with pending state
+interface MessageWithStatus extends Message {
+    pending?: boolean;
+}
 
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [messageInput, setMessageInput] = useState('');
+    const [messages, setMessages] = useState<MessageWithStatus[]>([]);
     const { useConversation, useMessages, useSendMessage } = useMessagingService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { subscribeToConversation, socket, isConnected } = useSocket();
 
     // Scroll to bottom of messages
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
-
 
     // Fetch conversation data
     const {
@@ -29,7 +36,26 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     } = useMessages(conversationId);
 
     // Send message mutation
-    const { mutate: sendMessage } = useSendMessage();
+    const { mutate: sendMessage } = useSendMessage({
+        onMutate: (newMessage) => {
+            // Create a temporary message with pending state
+            const tempMessage: MessageWithStatus = {
+                id: `temp-${Date.now()}`,
+                content: newMessage.data.content,
+                contentType: 'plain_text',
+                createdAt: new Date().toISOString(),
+                participantRole: 'CUSTOMER',
+                participantName: 'You',
+                pending: true
+            };
+
+            // Add to messages immediately for optimistic UI update
+            setMessages(prevMessages => [...prevMessages, tempMessage]);
+
+            // Scroll to the new message
+            setTimeout(scrollToBottom, 50);
+        }
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,12 +80,58 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         }
     };
 
+    // Initialize messages from API data
+    useEffect(() => {
+        if (messagesData?.data && messagesData.data.length > 0) {
+            setMessages(messagesData.data);
+        }
+    }, [messagesData]);
+
+    // Listen for new messages via WebSocket using our subscription system
+    useEffect(() => {
+        if (!socket || !isConnected) return;
+
+        const handleNewMessage = (newMessage: Message) => {
+            // Add message to state if it doesn't exist already
+            setMessages(prevMessages => {
+                // Skip if message already exists (by ID)
+                if (prevMessages.some(msg => msg.id === newMessage.id)) {
+                    return prevMessages;
+                }
+
+                // Replace pending message if content matches
+                const pendingMsgIndex = prevMessages.findIndex(
+                    msg => msg.pending && msg.content === newMessage.content
+                );
+
+                if (pendingMsgIndex >= 0) {
+                    // Replace the pending message with the confirmed one
+                    const updatedMessages = [...prevMessages];
+                    updatedMessages[pendingMsgIndex] = newMessage;
+                    return updatedMessages;
+                }
+
+                // Otherwise add as new message
+                return [...prevMessages, newMessage];
+            });
+
+            // Scroll to new message
+            setTimeout(scrollToBottom, 50);
+        };
+
+        // Subscribe to messages for this specific conversation
+        const unsubscribe = subscribeToConversation(conversationId, handleNewMessage);
+
+        // Return cleanup function
+        return () => {
+            unsubscribe();
+        };
+    }, [socket, isConnected, conversationId, scrollToBottom, subscribeToConversation]);
+
     // Scroll to bottom when messages change or on initial load
     useEffect(() => {
-        if (messagesData) {
-            scrollToBottom();
-        }
-    }, [messagesData, scrollToBottom]);
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
 
     const loading = isLoadingConversation || isLoadingMessages;
 
@@ -74,7 +146,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         );
     }
 
-    if (!conversation || !messagesData) {
+    if (!conversation) {
         return <div>Conversation not found</div>;
     }
 
@@ -94,7 +166,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                     </div>
 
                     <div className="space-y-4">
-                        {messagesData.data.map((message) => (
+                        {messages.map((message) => (
                             <div
                                 key={message.id}
                                 className="space-y-1"
@@ -115,10 +187,13 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                     )}
                                     <div
                                         tabIndex={0}
-                                        className={`max-w-[70%] rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${message.participantRole === 'CUSTOMER' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
+                                        className={`max-w-[70%] rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${message.participantRole === 'CUSTOMER'
+                                            ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                            : 'bg-gray-100 text-black'
+                                            }`}
                                     >
                                         <div>{message.content}</div>
-                                        <div className="text-[10px] mt-1 opacity-70">
+                                        <div className="text-[10px] mt-1 opacity-70 flex items-center">
                                             {format(new Date(message.createdAt), "h:mmaaa")}
                                         </div>
                                     </div>

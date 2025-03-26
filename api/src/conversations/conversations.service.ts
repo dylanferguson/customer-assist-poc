@@ -183,6 +183,7 @@ export class ConversationsService {
     if (!conversation) return null;
 
     const message: Message = {
+      conversationId: conversationId,
       id: `msg_${uuidv4()}`,
       content: createMessageDto.content,
       contentType: 'plain_text',
@@ -236,6 +237,7 @@ export class ConversationsService {
 
     // Transform the Connect message to internal Message format
     const internalMessage: Message = {
+      conversationId,
       id: `msg_${uuidv4()}`,
       content: message.Content,
       contentType: message.ContentType,

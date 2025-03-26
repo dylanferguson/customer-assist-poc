@@ -20,6 +20,7 @@ export interface Conversation {
 
 export interface Message {
     id: string;
+    conversationId: string;
     content: string;
     contentType: 'plain_text';
     createdAt: string;

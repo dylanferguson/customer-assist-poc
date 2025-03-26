@@ -8,9 +8,10 @@ export enum ParticipantRole {
 
 export class Message {
   id: string;
+  conversationId: string;
   content: string;
   contentType: string;
   createdAt: Date;
   participantRole: ParticipantRole;
   participantName: string;
-} 
+}
