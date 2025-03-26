@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    network_mode: service:dev-network
+    environment:
+      # For development purposes only
+      NODE_ENV: development
+
+  dev-network:
+    image: alpine:latest
+    command: sleep infinity
+    ports:
+      - "3000:3000"    # API
+      - "3001:3001"    # Frontend

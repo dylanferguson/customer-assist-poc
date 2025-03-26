@@ -1,0 +1,38 @@
+{
+  "name": "Customer Assist PoC",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "node",
+  "postCreateCommand": "npm install && npm run dev",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "js/ts.implicitProjectConfig.experimentalDecorators": true
+      }
+    }
+  },
+  "portsAttributes": {
+    "3000": {
+      "label": "API",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Frontend",
+      "onAutoForward": "notify"
+    }
+  },
+  "waitFor": "postCreateCommand",
+  "updateContentCommand": "npm install"
+} 
