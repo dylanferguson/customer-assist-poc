@@ -113,18 +113,6 @@ export const useMessagingService = () => {
     return useMutation({
       mutationFn: ({ conversationId, data }) =>
         messagingClient.sendMessage(conversationId, data),
-      onSuccess: (data, variables) => {
-        // Update messages in the cache
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.messages(variables.conversationId)
-        });
-        // Also update the conversation to reflect new message count
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.conversation(variables.conversationId)
-        });
-        // Update conversations list to show latest message
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-      },
       ...options,
     });
   };

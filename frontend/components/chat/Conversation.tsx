@@ -9,6 +9,7 @@ import { Message, MessageList } from '../../api/messagingServiceClient';
 // Type for message with pending state
 interface MessageWithStatus extends Message {
     pending?: boolean;
+    error?: boolean;
 }
 
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
@@ -41,6 +42,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             // Create a temporary message with pending state
             const tempMessage: MessageWithStatus = {
                 id: `temp-${Date.now()}`,
+                conversationId: '',
                 content: newMessage.data.content,
                 contentType: 'plain_text',
                 createdAt: new Date().toISOString(),
@@ -54,6 +56,36 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
             // Scroll to the new message
             setTimeout(scrollToBottom, 50);
+
+            // Return the temporary message to use in onSuccess
+            return { tempMessage };
+        },
+        onSuccess: (response, _variables, context) => {
+            if (!context) return;
+
+            const { tempMessage } = context as { tempMessage: MessageWithStatus };
+
+            // Replace the temporary message with the server response
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg.id === tempMessage.id ? response : msg
+                )
+            );
+        },
+        onError: (error, _variables, context) => {
+            if (!context) return;
+
+            const { tempMessage } = context as { tempMessage: MessageWithStatus };
+
+            // Mark the message as failed
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg.id === tempMessage.id ? { ...msg, pending: false, error: true } : msg
+                )
+            );
+
+            // Optionally show an error message to the user
+            console.error('Failed to send message:', error);
         }
     });
 
@@ -193,8 +225,13 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                             }`}
                                     >
                                         <div>{message.content}</div>
-                                        <div className="text-[10px] mt-1 opacity-70 flex items-center">
-                                            {format(new Date(message.createdAt), "h:mmaaa")}
+                                        <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                            <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                            {message.error && (
+                                                <span className="flex items-center ml-2 text-red-400">
+                                                    Not delivered
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
