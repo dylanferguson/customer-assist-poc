@@ -184,7 +184,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     return (
         <div className="relative flex flex-col">
-            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent', scrollbarGutter: 'stable' }}>
+            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent', scrollbarGutter: 'stable' }}>
                 <div className="p-4 mt-2 text-sm">
                     <p className="text-center text-gray-500">
                         Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
@@ -197,20 +197,21 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                         {format(new Date(conversation.createdAt), "dd MMMM, yyyy, h:mmaaa")}
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-[2px]">
                         {messages.map((message, index) => {
                             // Check if this message is from the same sender as the previous one
                             const previousMessage = index > 0 ? messages[index - 1] : null;
                             const isSameSender = previousMessage && previousMessage.participantRole === message.participantRole;
 
-                            // Check if this is the last message from this sender in a consecutive group
                             const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
                             const lastMessage = index === messages.length - 1;
+                            // Check if this is the last message from this sender in a consecutive group
                             const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
 
                             return (
                                 <div
                                     key={message.id}
+                                    className={`${isLastInGroup ? 'mb-4' : ''}`}
                                     role="article"
                                     aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
                                 >
@@ -228,7 +229,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
+                                        <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
                                             <div
                                                 tabIndex={0}
                                                 className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
@@ -237,7 +238,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                                     }`}
                                             >
                                                 <div className="break-words">{message.content}</div>
-                                                <div className="max-w-[70%] text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
                                                     {lastMessage && message.participantRole !== 'CUSTOMER' && (
                                                         <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
                                                     )}
