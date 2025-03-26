@@ -69,6 +69,12 @@ export interface SendMessageRequest {
     contentType: 'plain_text';
 }
 
+export interface TypingEvent {
+    conversationId: string;
+    participantType: 'AGENT' | 'CUSTOM_BOT';
+    participantName: string;
+}
+
 /**
  * Type for token provider callback function
  */

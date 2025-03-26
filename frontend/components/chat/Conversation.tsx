@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { Bot, UserRound, Send } from 'lucide-react';
 import { useMessagingService } from '../../hooks/useMessagingService';
 import { useSocket } from '../../context/SocketContext';
-import { Message, MessageList } from '../../api/messagingServiceClient';
-
+import { Message, TypingEvent } from '../../api/messagingServiceClient';
+import { TypingIndicator } from '../ui/typing-indicator';
 // Type for message with pending state
 interface MessageWithStatus extends Message {
     pending?: boolean;
@@ -14,6 +14,8 @@ interface MessageWithStatus extends Message {
 
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [messageInput, setMessageInput] = useState('');
+    const [isAgentTyping, setIsAgentTyping] = useState(false);
+    const [isAgentTypingTimeout, setIsAgentTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const [messages, setMessages] = useState<MessageWithStatus[]>([]);
     const { useConversation, useMessages, useSendMessage } = useMessagingService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -21,7 +23,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     // Scroll to bottom of messages
     const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, []);
 
     // Fetch conversation data
@@ -125,6 +127,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
         const handleNewMessage = (newMessage: Message) => {
             // Add message to state if it doesn't exist already
+            setIsAgentTyping(false);
             setMessages(prevMessages => {
                 // Skip if message already exists (by ID)
                 if (prevMessages.some(msg => msg.id === newMessage.id)) {
@@ -151,8 +154,18 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             setTimeout(scrollToBottom, 50);
         };
 
+        const handleTyping = (data: TypingEvent) => {
+            if (data.participantType === 'AGENT') {
+                setIsAgentTyping(true);
+                setTimeout(scrollToBottom, 50);
+                setIsAgentTypingTimeout(setTimeout(() => {
+                    setIsAgentTyping(false);
+                }, 50000));
+            }
+        };
+
         // Subscribe to messages for this specific conversation
-        const unsubscribe = subscribeToConversation(conversationId, handleNewMessage);
+        const unsubscribe = subscribeToConversation(conversationId, { message: handleNewMessage, typing: handleTyping });
 
         // Return cleanup function
         return () => {
@@ -184,7 +197,12 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     return (
         <div className="relative flex flex-col">
-            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent', scrollbarGutter: 'stable' }}>
+            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-2"
+                style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent',
+                    scrollbarGutter: 'stable'
+                }}>
                 <div className="p-4 mt-2 text-sm">
                     <p className="text-center text-gray-500">
                         Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
@@ -218,9 +236,9 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                 >
 
                                     <div
-                                        className={`grid grid-cols-[auto_1fr] gap-2`}
+                                        className='grid grid-cols-[auto_1fr] gap-2'
                                     >
-                                        <div className={'w-10'}>
+                                        <div className='w-10'>
                                             {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
                                                 <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
                                                     {message.participantName === 'AGENT' ? (
@@ -263,6 +281,16 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                 </div>
                             );
                         })}
+                        {isAgentTyping && (
+                            <div
+                                className={`grid grid-cols-[auto_1fr] gap-2`}
+                            >
+                                <div className='w-10'></div>
+                                <div className="flex items-center gap-2">
+                                    <TypingIndicator />
+                                </div>
+                            </div>
+                        )}
                         <div ref={messagesEndRef} />
                     </div>
                 </div>

@@ -235,6 +235,7 @@ export class ConversationsService {
 
     if (isAgentTypingEvent) {
       const typingEvent: TypingEvent = {
+        conversationId,
         participantType: message.ParticipantRole as 'CUSTOMER' | 'AGENT' | 'CUSTOM_BOT',
         participantName: message.ParticipantId,
       };

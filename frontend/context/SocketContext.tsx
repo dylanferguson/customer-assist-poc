@@ -3,8 +3,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
-import { Message } from '@/api/messagingServiceClient'
-
+import { Message, TypingEvent } from '@/api/messagingServiceClient'
 
 interface SocketContextType {
     socket: Socket | null
@@ -12,8 +11,8 @@ interface SocketContextType {
     socketAuthenticated: boolean
     connect: () => void
     disconnect: () => void
-    subscribeToConversation: (conversationId: string, callback: (message: any) => void) => () => void
-    unsubscribeFromConversation: (conversationId: string) => void
+    subscribeToConversation: (conversationId: string, { message, typing }: { message?: (message: Message) => void, typing?: (data: TypingEvent) => void }) => () => void
+    unsubscribeFromConversation: (conversationId: string, { message, typing }: { message?: (message: Message) => void, typing?: (data: TypingEvent) => void }) => void
 }
 
 const messageSound = typeof window !== 'undefined'
@@ -43,7 +42,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     // Keep track of conversation subscriptions
     const conversationSubscribersRef = useRef<{
-        [conversationId: string]: Set<(message: any) => void>
+        [conversationId: string]: {
+            message?: Set<(message: any) => void>
+            typing?: Set<(data: TypingEvent) => void>
+        }
     }>({})
 
     // Get auth state directly from context
@@ -82,8 +84,16 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
                     const conversationId = message.conversationId;
                     const subscribers = conversationSubscribersRef.current[conversationId];
                     if (subscribers) {
-                        subscribers.forEach(callback => callback(message));
+                        subscribers.message?.forEach(callback => callback(message));
                     }
+                }
+            })
+
+            socketRef.current.on('typing', (data) => {
+                const conversationId = data.conversationId;
+                const subscribers = conversationSubscribersRef.current[conversationId];
+                if (subscribers) {
+                    subscribers.typing?.forEach(callback => callback(data));
                 }
             })
 
@@ -120,34 +130,59 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
 
     // Subscribe to messages for a specific conversation
-    const subscribeToConversation = (conversationId: string, callback: (message: Message) => void) => {
+    const subscribeToConversation = (conversationId: string, { message, typing }: { message?: (message: Message) => void, typing?: (data: TypingEvent) => void }) => {
         if (!conversationSubscribersRef.current[conversationId]) {
-            conversationSubscribersRef.current[conversationId] = new Set()
+            conversationSubscribersRef.current[conversationId] = {
+                message: new Set(),
+                typing: new Set()
+            }
         }
 
-        conversationSubscribersRef.current[conversationId].add(callback)
-        console.log(`Subscribed to messages for conversation ${conversationId}`)
+        if (message) {
+            conversationSubscribersRef.current[conversationId].message?.add(message)
+            console.log(`Subscribed to messages for conversation ${conversationId}`)
+        }
+        if (typing) {
+            conversationSubscribersRef.current[conversationId].typing?.add(typing)
+            console.log(`Subscribed to typing for conversation ${conversationId}`)
+        }
 
         // Return unsubscribe function
         return () => {
-            unsubscribeFromConversation(conversationId, callback)
+            unsubscribeFromConversation(conversationId, { message, typing })
         }
     }
 
-    // Unsubscribe from messages for a specific conversation
-    const unsubscribeFromConversation = (conversationId: string, callback?: (message: Message) => void) => {
+    // Move unsubscribeFromConversation outside of subscribeToConversation
+    const unsubscribeFromConversation = (conversationId: string,
+        { message, typing }: {
+            message?: (message: Message) => void,
+            typing?: (data: TypingEvent) => void
+        }) => {
         if (!conversationSubscribersRef.current[conversationId]) return
 
-        if (callback) {
+        if (message) {
             // Remove specific callback
-            conversationSubscribersRef.current[conversationId].delete(callback)
+            conversationSubscribersRef.current[conversationId].message?.delete(message)
             console.log(`Unsubscribed specific callback from conversation ${conversationId}`)
 
             // Clean up empty set
-            if (conversationSubscribersRef.current[conversationId].size === 0) {
+            if (conversationSubscribersRef.current[conversationId]?.message?.size === 0) {
                 delete conversationSubscribersRef.current[conversationId]
             }
-        } else {
+        }
+        if (typing) {
+            // Remove specific callback
+            conversationSubscribersRef.current[conversationId]?.typing?.delete(typing)
+            console.log(`Unsubscribed specific callback from conversation ${conversationId}`)
+
+            // Clean up empty set
+            if (conversationSubscribersRef.current[conversationId]?.typing?.size === 0) {
+                delete conversationSubscribersRef.current[conversationId]
+            }
+        }
+
+        if (!typing && !message) {
             // Remove all callbacks for this conversation
             delete conversationSubscribersRef.current[conversationId]
             console.log(`Unsubscribed all callbacks from conversation ${conversationId}`)
@@ -184,4 +219,4 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
             {children}
         </SocketContext.Provider>
     )
-} 
+}
