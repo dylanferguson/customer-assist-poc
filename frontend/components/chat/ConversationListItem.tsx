@@ -45,12 +45,10 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
                                 'No messages'
                             }
                         </span>
-                        <div className="flex items-start justify-between">
-                            <h3 className={`text-base ${conversation.unread_count > 0 ? 'font-bold' : 'font-medium'}`}>
-                                {conversation.title}
-                            </h3>
-                        </div>
-                        <p className={`text-sm truncate min-w-0 max-w-2/5 ${conversation.unread_count > 0 ? 'text-gray-800' : 'text-gray-500'}`}>
+                        <h3 arial-label="conversation subject" className={`text-base ${conversation.unread_count > 0 ? 'font-bold' : 'font-medium'}`}>
+                            {conversation.title}
+                        </h3>
+                        <p arial-label="conversation last message" className={`text-sm ${conversation.unread_count > 0 ? 'text-gray-800' : 'text-gray-500'}`}>
                             {conversation.lastMessage?.content || 'Start a new conversation'}
                         </p>
                     </div>
