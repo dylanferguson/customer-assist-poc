@@ -1,7 +1,10 @@
+'use client'
+
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { Message } from '@/api/messagingServiceClient'
+
 
 interface SocketContextType {
     socket: Socket | null
@@ -12,6 +15,10 @@ interface SocketContextType {
     subscribeToConversation: (conversationId: string, callback: (message: any) => void) => () => void
     unsubscribeFromConversation: (conversationId: string) => void
 }
+
+const messageSound = typeof window !== 'undefined'
+    ? new Audio('/sounds/chime.mp3')
+    : null;
 
 const SocketContext = createContext<SocketContextType>({
     socket: null,
@@ -64,6 +71,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
             socketRef.current.on('message', (message) => {
                 console.log('Received message:', message)
+
+                // Play notification sound when a new message arrives
+                messageSound?.play().catch(err => {
+                    console.error('Failed to play message sound:', err)
+                });
+
+
                 if (message.conversationId) {
                     const conversationId = message.conversationId;
                     const subscribers = conversationSubscribersRef.current[conversationId];
