@@ -160,7 +160,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                 setTimeout(scrollToBottom, 50);
                 setIsAgentTypingTimeout(setTimeout(() => {
                     setIsAgentTyping(false);
-                }, 50000));
+                }, 5000));
             }
         };
 
@@ -241,7 +241,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                         <div className='w-10'>
                                             {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
                                                 <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
-                                                    {message.participantName === 'AGENT' ? (
+                                                    {message.participantRole === 'AGENT' ? (
                                                         <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
                                                     ) : (
                                                         <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
@@ -308,7 +308,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                     />
                     <button
                         type="submit"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-md cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-90"
                         aria-label="Send message"
                         disabled={!messageInput.trim()}
                     >

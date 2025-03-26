@@ -27,6 +27,12 @@ const baseChatMessageSchema = z.object({
     ParticipantId: z.string(),
 });
 
+const BaseEventSchema = z.object({
+    Id: z.string(),
+    AbsoluteTime: z.string().datetime(),
+    InitialContactId: z.string(),
+});
+
 export const EVENT_CONTENT_TYPE = {
     TYPING: "application/vnd.amazonaws.connect.event.typing",
     READ_RECEIPT: "application/vnd.amazonaws.connect.event.message.read",
@@ -42,7 +48,8 @@ export const EVENT_CONTENT_TYPE = {
 
 const eventChatMessageSchema = baseChatMessageSchema.extend({
     Type: z.literal('EVENT'),
-    ParticipantRole: participantRoleSchema,
+    ParticipantRole: participantRoleSchema.optional(),
+    ParticipantId: z.string().optional(),
     ContentType: z.enum([
         EVENT_CONTENT_TYPE.TYPING,
         EVENT_CONTENT_TYPE.READ_RECEIPT,

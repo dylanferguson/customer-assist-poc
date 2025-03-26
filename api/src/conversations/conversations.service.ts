@@ -253,7 +253,7 @@ export class ConversationsService {
         contentType: message.ContentType,
         createdAt: new Date(connectMessage.content.AbsoluteTime),
         participantRole: message.ParticipantRole as ParticipantRole,
-        participantName: 'Agent',
+        participantName: message.ParticipantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant',
       };
 
       // Store the transformed message
