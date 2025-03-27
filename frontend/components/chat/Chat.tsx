@@ -11,7 +11,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip"
 const queryClient = new QueryClient()
 
 type ChatProps = {
-  mode: 'single-threaded' | 'multi-threaded'
+  mode?: 'single-threaded' | 'multi-threaded'
 }
 
 export function Chat({ mode = 'multi-threaded' }: ChatProps) {

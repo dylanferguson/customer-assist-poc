@@ -5,8 +5,8 @@ import Inbox from "./Inbox"
 import { useState } from "react"
 import { Conversation } from "./Conversation"
 import { useSocket } from "@/context/SocketContext"
-import { createConversation } from ''
 import { useMessagingService } from "@/hooks/useMessagingService"
+import { Spinner } from "@/components/ui/spinner"
 
 type ChatProps = {
     toggleChat: () => void
@@ -70,19 +70,25 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
                 </Button>
             </div>
             <div className="flex flex-1 h-full">
-                {selectedConversation ? (
-                    <div className="flex flex-1 duration-300 animate-in fade-in slide-in-from-right-5">
-                        <Conversation conversationId={selectedConversation} />
+                {createConversation.isPending ? (
+                    <div className="flex flex-col items-center justify-center flex-1 p-4">
+                        <Spinner />
+                        <p className="mt-2 text-sm text-muted-foreground">Starting new chat...</p>
                     </div>
-                ) : showInbox ? (
-                    <div className="flex flex-1 duration-300 animate-in fade-in">
-                        <Inbox onSelectConversation={setSelectedConversation} />
-                    </div>
-                ) : (
-                    <div className="flex flex-1 duration-300 animate-in fade-in">
-                        <WelcomeScreen onStartConversation={handleStartConversation} />
-                    </div>
-                )}
+                ) :
+                    selectedConversation ? (
+                        <div className="flex flex-1 animate-in fade-in">
+                            <Conversation conversationId={selectedConversation} />
+                        </div>
+                    ) : showInbox ? (
+                        <div className="flex flex-1 duration-300 animate-in fade-in">
+                            <Inbox onSelectConversation={setSelectedConversation} />
+                        </div>
+                    ) : (
+                        <div className="flex flex-1 duration-300 animate-in fade-in">
+                            <WelcomeScreen onStartConversation={handleStartConversation} />
+                        </div>
+                    )}
             </div>
         </div>
     )
