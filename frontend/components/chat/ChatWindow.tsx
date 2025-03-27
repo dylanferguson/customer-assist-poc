@@ -21,7 +21,7 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
     const { connect, isConnected } = useSocket();
     const { useCreateConversation } = useMessagingService();
     const createConversation = useCreateConversation({
-        onError(error, variables, context) {
+        onError(error) {
             toast.error('Error creating conversation', { description: 'Please try again later' })
             console.error('Error creating conversation:', error)
         },
