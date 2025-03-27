@@ -8,6 +8,7 @@ import {
   Frame,
   LifeBuoy,
   Map,
+  MessageCircle,
   PieChart,
   Send,
   Settings2,
@@ -39,7 +40,6 @@ const data = {
       title: "Playground",
       url: "#",
       icon: SquareTerminal,
-      isActive: true,
       items: [
         {
           title: "History",
@@ -120,6 +120,18 @@ const data = {
         },
       ],
     },
+    {
+      title: "Contact  Us",
+      url: "#",
+      icon: MessageCircle,
+      isActive: true,
+      items: [
+        {
+          title: "Message Centre",
+          url: "#",
+        },
+      ],
+    },
   ],
   navSecondary: [
     {
@@ -160,12 +172,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <div className="flex items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground aspect-square size-8">
                   <Command className="size-4" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                <div className="grid flex-1 text-sm leading-tight text-left">
+                  <span className="font-medium truncate">Acme Inc</span>
+                  <span className="text-xs truncate">Enterprise</span>
                 </div>
               </a>
             </SidebarMenuButton>

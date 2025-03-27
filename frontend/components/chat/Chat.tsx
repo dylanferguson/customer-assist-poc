@@ -19,13 +19,11 @@ export function Chat({ mode = 'multi-threaded' }: ChatProps) {
   return (
     <ChatProviders>
       <div className="fixed z-50 bottom-4 right-4">
-        <div className="fixed z-50 bottom-4 right-4">
-          {isOpen ? (
-            <ChatWindow toggleChat={toggleChat} mode={mode} />
-          ) : (
-            <ChatFab onClick={toggleChat} />
-          )}
-        </div>
+        {isOpen ? (
+          <ChatWindow toggleChat={toggleChat} mode={mode} />
+        ) : (
+          <ChatFab onClick={toggleChat} />
+        )}
       </div>
     </ChatProviders>
   )
