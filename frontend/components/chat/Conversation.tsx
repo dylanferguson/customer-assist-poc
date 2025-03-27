@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Spinner } from '../ui/spinner';
 import { format } from 'date-fns';
-import { Bot, UserRound, Send } from 'lucide-react';
+import { Bot, UserRound, Send, Plus, MapPin, File } from 'lucide-react';
 import { useMessagingService } from '../../hooks/useMessagingService';
 import { useSocket } from '../../context/SocketContext';
 import { Message, TypingEvent } from '../../api/messagingServiceClient';
 import { TypingIndicator } from '../ui/typing-indicator';
 import { TooltipTrigger, Tooltip, TooltipContent } from '../ui/tooltip';
-// Type for message with pending state
+import { ChatActionsPopover } from './conversation/ChatActionsPopover';
+
 interface MessageWithStatus extends Message {
     pending?: boolean;
     error?: boolean;
@@ -304,6 +305,11 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
             <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-white border-t">
                 <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                    <ChatActionsPopover
+                        onLocationClick={() => { }}
+                        onFileClick={() => { }}
+                        onImageClick={() => { }}
+                    />
                     <textarea
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
