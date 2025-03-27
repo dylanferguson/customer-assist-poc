@@ -182,6 +182,32 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     const loading = isLoadingConversation || isLoadingMessages;
 
+    const handleLocationClick = () => {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+                sendMessage({
+                    conversationId,
+                    data: {
+                        content: `📍 My location: ${mapsLink}`,
+                        contentType: 'plain_text'
+                    }
+                });
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                alert('Unable to retrieve your location. Please check your permissions and try again.');
+            }
+        );
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center w-full h-full">
@@ -266,7 +292,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                                             : 'bg-gray-100 text-black'
                                                             }`}
                                                     >
-                                                        <div className="break-words">{message.content}</div>
+                                                        <div className="text-left break-words">{message.content}</div>
                                                         <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
                                                             {lastMessage && message.participantRole !== 'CUSTOMER' && (
                                                                 <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
@@ -306,7 +332,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-white border-t">
                 <form onSubmit={handleSubmit} className="flex items-center gap-2">
                     <ChatActionsPopover
-                        onLocationClick={() => { }}
+                        onLocationClick={handleLocationClick}
                         onFileClick={() => { }}
                         onImageClick={() => { }}
                     />
