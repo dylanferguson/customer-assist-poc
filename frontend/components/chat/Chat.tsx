@@ -10,7 +10,11 @@ import { TooltipProvider } from "@radix-ui/react-tooltip"
 
 const queryClient = new QueryClient()
 
-export function Chat() {
+type ChatProps = {
+  mode: 'single-threaded' | 'multi-threaded'
+}
+
+export function Chat({ mode = 'multi-threaded' }: ChatProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const toggleChat = () => {
@@ -24,7 +28,7 @@ export function Chat() {
           <TooltipProvider>
             <div className="fixed z-50 bottom-4 right-4">
               {isOpen ? (
-                <ChatWindow toggleChat={toggleChat} />
+                <ChatWindow toggleChat={toggleChat} mode={mode} />
               ) : (
                 <ChatFab onClick={toggleChat} />
               )}

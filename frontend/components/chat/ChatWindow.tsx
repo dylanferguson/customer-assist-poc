@@ -5,23 +5,33 @@ import Inbox from "./Inbox"
 import { useState } from "react"
 import { Conversation } from "./Conversation"
 import { useSocket } from "@/context/SocketContext"
-import { useAuth } from "@/context/AuthContext"
+import { createConversation } from ''
+import { useMessagingService } from "@/hooks/useMessagingService"
 
 type ChatProps = {
     toggleChat: () => void
+    mode: 'single-threaded' | 'multi-threaded'
 }
 
-export const ChatWindow = ({ toggleChat }: ChatProps) => {
-    const [showInbox, setShowInbox] = useState(false)
-    const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
-    const { connect, isConnected } = useSocket()
+export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
+    const [showInbox, setShowInbox] = useState(false);
+    const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+    const { connect, isConnected } = useSocket();
+    const { useCreateConversation } = useMessagingService();
+    const createConversation = useCreateConversation();
 
-    const handleStartConversation = () => {
+    const handleStartConversation = async () => {
         // Initialize socket when conversation starts
         if (!isConnected) {
             connect()
         }
-        setShowInbox(true)
+
+        if (mode === 'multi-threaded') {
+            setShowInbox(true)
+        } else {
+            const newConversation = await createConversation.mutateAsync({})
+            setSelectedConversation(newConversation.id)
+        }
     }
 
     const handleBackClick = () => {

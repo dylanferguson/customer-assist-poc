@@ -17,7 +17,7 @@ interface MessageWithStatus extends Message {
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [messageInput, setMessageInput] = useState('');
     const [isAgentTyping, setIsAgentTyping] = useState(false);
-    const [isAgentTypingTimeout, setIsAgentTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [_isAgentTypingTimeout, setIsAgentTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const [messages, setMessages] = useState<MessageWithStatus[]>([]);
     const { useConversation, useMessages, useSendMessage } = useMessagingService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
