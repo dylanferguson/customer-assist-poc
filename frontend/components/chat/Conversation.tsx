@@ -6,6 +6,7 @@ import { useMessagingService } from '../../hooks/useMessagingService';
 import { useSocket } from '../../context/SocketContext';
 import { Message, TypingEvent } from '../../api/messagingServiceClient';
 import { TypingIndicator } from '../ui/typing-indicator';
+import { TooltipTrigger, Tooltip, TooltipContent } from '../ui/tooltip';
 // Type for message with pending state
 interface MessageWithStatus extends Message {
     pending?: boolean;
@@ -249,33 +250,38 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                                                 </div>
                                             )}
                                         </div>
-                                        <div>
+                                        <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
                                             {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
                                                 <div className="mb-1 text-xs text-gray-500">
                                                     {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
                                                 </div>
                                             )}
-                                            <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
-                                                <div
-                                                    tabIndex={0}
-                                                    className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
-                                                        ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
-                                                        : 'bg-gray-100 text-black'
-                                                        }`}
-                                                >
-                                                    <div className="break-words">{message.content}</div>
-                                                    <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
-                                                        {lastMessage && message.participantRole !== 'CUSTOMER' && (
-                                                            <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
-                                                        )}
-                                                        {message.error && (
-                                                            <span className="flex items-center ml-2 text-red-400">
-                                                                Not delivered
-                                                            </span>
-                                                        )}
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <div
+                                                        tabIndex={0}
+                                                        className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
+                                                            ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                                            : 'bg-gray-100 text-black'
+                                                            }`}
+                                                    >
+                                                        <div className="break-words">{message.content}</div>
+                                                        <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                            {lastMessage && message.participantRole !== 'CUSTOMER' && (
+                                                                <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                                            )}
+                                                            {message.error && (
+                                                                <span className="flex items-center ml-2 text-red-400">
+                                                                    Not delivered
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent aria-label="Message sent at">
+                                                    <p>{format(new Date(message.createdAt), "HH:mm")}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 </div>
