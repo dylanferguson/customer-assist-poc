@@ -27,7 +27,7 @@ const baseChatMessageSchema = z.object({
     ParticipantId: z.string(),
 });
 
-const BaseEventSchema = z.object({
+const baseEventSchema = z.object({
     Id: z.string(),
     AbsoluteTime: z.string().datetime(),
     InitialContactId: z.string(),
@@ -46,7 +46,7 @@ export const EVENT_CONTENT_TYPE = {
     CHAT_ENDED: "application/vnd.amazonaws.connect.event.chat.ended"
 } as const;
 
-const eventChatMessageSchema = BaseEventSchema.extend({
+const eventChatMessageSchema = baseEventSchema.extend({
     Type: z.literal('EVENT'),
     ParticipantRole: participantRoleSchema.optional(),
     ParticipantId: z.string().optional(),
@@ -63,6 +63,21 @@ const eventChatMessageSchema = BaseEventSchema.extend({
         EVENT_CONTENT_TYPE.CHAT_ENDED
     ]),
 });
+
+export const MESSAGE_METADATA_CONTENT_TYPE = "application/vnd.amazonaws.connect.message.metadata";
+
+const messageMetadataSchema = baseEventSchema.extend({
+    Type: z.literal('MESSAGEMETADATA'),
+    ContactId: z.string(),
+    ContentType: z.literal(MESSAGE_METADATA_CONTENT_TYPE),
+    MessageMetadata: z.object({
+        MessageId: z.string(),
+        Recipients: z.array(z.object({
+            DeliveredTimestamp: z.string().datetime(),
+            RecipientParticipantId: z.string(),
+        }))
+    }),
+})
 
 const MESSAGE_CONTENT_TYPE = {
     PLAIN_TEXT: "text/plain",
@@ -87,6 +102,7 @@ const messageChatMessageSchema = baseChatMessageSchema.extend({
 const chatMessageTypeSchema = z.discriminatedUnion('Type', [
     eventChatMessageSchema,
     messageChatMessageSchema,
+    messageMetadataSchema,
 ]);
 
 export const connectMessageSchema = z.object({
