@@ -128,4 +128,4 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
     )
 }
 
-export default Inbox
+export { Inbox }

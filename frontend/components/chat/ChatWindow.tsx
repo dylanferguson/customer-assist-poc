@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { X, ArrowLeft } from "lucide-react"
 import { WelcomeScreen } from "./WelcomeScreen"
-import Inbox from "./Inbox"
+import { Inbox } from "./Inbox"
 import { useState, useEffect } from "react"
 import { Conversation } from "./Conversation"
 import { useSocket } from "@/context/SocketContext"
