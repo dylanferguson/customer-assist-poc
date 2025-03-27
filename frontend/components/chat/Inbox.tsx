@@ -5,6 +5,7 @@ import { LinkCard } from "../ui/link-card"
 import { ConversationListItem } from "./ConversationListItem"
 import { FilterButton } from "../ui/filter-button"
 import { useMessagingService } from "../../hooks/useMessagingService"
+import { toast } from "sonner"
 
 export interface InboxProps {
     onSelectConversation?: (id: string) => void
@@ -52,7 +53,12 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
     const { data: conversationList, isLoading } = useConversations({
         is_archived: activeFilter === 'archived'
     })
-    const createConversation = useCreateConversation()
+    const createConversation = useCreateConversation({
+        onError: (error) => {
+            toast.error('Error creating conversation', { description: 'Please try again later' })
+            console.error('Error creating conversation:', error)
+        }
+    })
     const currentConversations = conversationList?.conversations || []
 
     const handleConversationClick = (id: string) => {

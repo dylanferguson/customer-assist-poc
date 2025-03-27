@@ -46,7 +46,7 @@ export const EVENT_CONTENT_TYPE = {
     CHAT_ENDED: "application/vnd.amazonaws.connect.event.chat.ended"
 } as const;
 
-const eventChatMessageSchema = baseChatMessageSchema.extend({
+const eventChatMessageSchema = BaseEventSchema.extend({
     Type: z.literal('EVENT'),
     ParticipantRole: participantRoleSchema.optional(),
     ParticipantId: z.string().optional(),

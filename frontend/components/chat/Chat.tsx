@@ -7,6 +7,7 @@ import { ChatWindow } from "./ChatWindow"
 import { ChatFab } from "./FAB"
 import { AuthProvider } from "@/context/AuthContext"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
+import { Toaster } from "sonner"
 
 const queryClient = new QueryClient()
 
@@ -32,6 +33,7 @@ export function Chat({ mode = 'multi-threaded' }: ChatProps) {
               ) : (
                 <ChatFab onClick={toggleChat} />
               )}
+              <Toaster position="top-right" richColors />
             </div>
           </TooltipProvider>
         </SocketProvider>
