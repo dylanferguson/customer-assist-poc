@@ -8,6 +8,7 @@ import { InboxItem } from "./InboxItem"
 import { FilterButton } from "../ui/filter-button"
 import { useMessagingService } from "../../hooks/useMessagingService"
 import { toast } from "sonner"
+import { motion, AnimatePresence } from "framer-motion"
 
 export interface InboxProps {
     onSelectConversation?: (id: string) => void
@@ -109,13 +110,33 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                     <EmptyInbox />
                 ) : (
                     <div className="flex-1 mt-6 overflow-y-auto">
-                        {currentConversations.map((conversation) => (
-                            <InboxItem
-                                key={conversation.id}
-                                conversation={conversation}
-                                onClick={() => handleConversationClick(conversation.id)}
-                            />
-                        ))}
+                        <AnimatePresence mode="popLayout">
+                            {currentConversations.map((conversation) => (
+                                <motion.div
+                                    key={conversation.id}
+                                    initial={{ opacity: 0, }}
+                                    animate={{
+                                        opacity: 1,
+                                        scale: 1,
+                                        transition: {
+                                            type: "spring",
+                                            bounce: 0.3
+                                        }
+                                    }}
+                                    exit={{ opacity: 0 }}
+                                    layout
+                                    transition={{
+                                        layout: { type: "spring", bounce: 0.1 },
+                                        duration: 0.2
+                                    }}
+                                >
+                                    <InboxItem
+                                        conversation={conversation}
+                                        onClick={() => handleConversationClick(conversation.id)}
+                                    />
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     </div>
                 )}
 
