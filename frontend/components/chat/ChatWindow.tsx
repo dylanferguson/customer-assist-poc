@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { X, ArrowLeft } from "lucide-react"
 import { WelcomeScreen } from "./WelcomeScreen"
 import { Inbox } from "./Inbox"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Conversation } from "./Conversation"
 import { useSocket } from "@/context/SocketContext"
 import { useMessagingService } from "@/hooks/useMessagingService"
@@ -88,7 +88,7 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
                             <Conversation conversationId={selectedConversation} />
                         </div>
                     ) : showInbox ? (
-                        <div className="duration-300 animate-in fade-in">
+                        <div className="w-full duration-300 animate-in fade-in">
                             <Inbox onSelectConversation={setSelectedConversation} />
                         </div>
                     ) : (
