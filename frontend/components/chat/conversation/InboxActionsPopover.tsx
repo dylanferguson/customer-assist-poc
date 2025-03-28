@@ -22,16 +22,16 @@ export const InboxActionsPopover = ({ onArchiveClick, isArchived }: InboxActions
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger>
                 <div
-                    className={`${open ? 'text-gray-800' : 'invisible'}  bg-white rounded-full cursor-pointer group-hover:visible hover:text-gray-800 hover:bg-accent/90`}
+                    className={`${open ? 'text-gray-200' : 'invisible'}  bg-white rounded-full cursor-pointer group-hover:visible hover:text-gray-200 hover:bg-accent/90`}
                     onClick={(e) => {
                         e.stopPropagation();
                         setOpen(!open);
                     }}
                 >
-                    <CircleEllipsis className="stroke-[1.5] w-7 h-7 stroke-gray-500 hover:stroke-gray-500" />
+                    <CircleEllipsis className="stroke-[1.5] w-7 h-7 stroke-gray-400 hover:stroke-gray-400" />
                 </div>
             </PopoverTrigger>
-            <PopoverContent className="w-30" align="center" side="top">
+            <PopoverContent className="w-30" align="end" side="top">
                 <div className="flex flex-col gap-3">
                     <PopoverActionButton
                         icon={isArchived ? <ArchiveRestore className='w-4 h-4' /> : <Archive className='w-4 h-4' />}

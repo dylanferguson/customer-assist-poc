@@ -10,6 +10,7 @@ import { TooltipTrigger, Tooltip, TooltipContent } from '../ui/tooltip';
 import { ChatActionsPopover } from './conversation/ChatActionsPopover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useConfig } from '@/context/ConfigContext';
 
 interface MessageWithStatus extends Message {
     pending?: boolean;
@@ -143,6 +144,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     const { useMessages, useSendMessage } = useMessagingService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { subscribeToConversation, socket, isConnected } = useSocket();
+    const config = useConfig();
 
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -337,50 +339,47 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     }
 
     return (
-        <div className="relative flex flex-col">
-            <div className="overflow-y-auto max-h-[552px] pb-[57px] pr-2"
-                style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent',
-                    scrollbarGutter: 'stable'
-                }}>
-                <div className="p-4 mt-2 text-sm">
-                    <p className="text-center text-gray-500">
-                        Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
-                        Your information is handled in accordance with our Privacy Policy.
-                    </p>
+        <div className="relative flex flex-col h-full border border-gray-100 rounded-md">
+            <div className="flex flex-col flex-1 min-h-0">
+                <div className={`flex-1 overflow-y-auto ${config.viewMode == 'chat' ? 'max-h-[552px]' : ''} pr-2 scrollbar-thin`}>
+                    <div className="p-4 mt-2 text-sm">
+                        <p className="text-center text-gray-500">
+                            Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.
+                            Your information is handled in accordance with our Privacy Policy.
+                        </p>
+                    </div>
+
+                    <div className="p-3">
+                        <MessagesList messages={messages} isAgentTyping={isAgentTyping} />
+                        <div ref={messagesEndRef} />
+                    </div>
                 </div>
 
-                <div className="p-3">
-                    <MessagesList messages={messages} isAgentTyping={isAgentTyping} />
-                    <div ref={messagesEndRef} />
+                <div className="relative px-4 py-2 bg-white border-t border-gray-100 round-md">
+                    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                        <ChatActionsPopover
+                            onLocationClick={handleLocationClick}
+                            onFileClick={() => { }}
+                            onImageClick={() => { }}
+                        />
+                        <textarea
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Type your message..."
+                            rows={1}
+                            className="flex-1 min-w-0 px-3 py-2 overflow-y-auto text-sm border-gray-100 rounded-md resize-none bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                        <button
+                            type="submit"
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-md cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-90"
+                            aria-label="Send message"
+                            disabled={!messageInput.trim()}
+                        >
+                            <Send className="w-5 h-5" />
+                        </button>
+                    </form>
                 </div>
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-white border-t">
-                <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                    <ChatActionsPopover
-                        onLocationClick={handleLocationClick}
-                        onFileClick={() => { }}
-                        onImageClick={() => { }}
-                    />
-                    <textarea
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type your message..."
-                        rows={1}
-                        className="flex-1 min-w-0 px-3 py-2 overflow-y-auto text-sm border rounded-md resize-none bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <button
-                        type="submit"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-md cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-90"
-                        aria-label="Send message"
-                        disabled={!messageInput.trim()}
-                    >
-                        <Send className="w-5 h-5" />
-                    </button>
-                </form>
             </div>
         </div>
     );

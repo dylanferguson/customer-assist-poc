@@ -44,9 +44,7 @@ export default function Page() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-col flex-1 gap-4 p-4 pt-0">
-          <MessageCentre />
-        </div>
+        <MessageCentre />
       </SidebarInset>
     </SidebarProvider>
   )

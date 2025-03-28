@@ -154,3 +154,9 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-gutter: stable;
+}

@@ -9,6 +9,8 @@ import { FilterButton } from "../ui/filter-button"
 import { useMessagingService } from "../../hooks/useMessagingService"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
+import { useConfig } from "@/context/ConfigContext"
+import { cn } from "@/lib/utils"
 
 export interface InboxProps {
     onSelectConversation?: (id: string) => void
@@ -51,6 +53,7 @@ const EmptyInbox = () => {
 const Inbox = ({ onSelectConversation }: InboxProps) => {
     const [activeFilter, setActiveFilter] = useState<'active' | 'archived'>('active')
     const { useConversations, useCreateConversation } = useMessagingService()
+    const config = useConfig()
 
     // Query conversations with archived filter
     const { data: conversationList, isLoading } = useConversations({
@@ -83,12 +86,12 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
     }
 
     return (
-        <div className="flex flex-1 h-full p-4">
-            <div className="flex flex-col flex-1 h-full">
-                <div>
-                    <p className="text-gray-700 text-sm/5">ACME virtual assistant is here for you 24/7. Our human team will get back to you within 48 hours.</p>
-                    <h2 className="mt-6 text-lg font-bold">Messages</h2>
-                    <div className="flex gap-2 mt-4">
+        <div className={cn(config.viewMode == 'chat' && "p-4")}>
+            <div className="h-full">
+                <div className="mb-4">
+                    <p className="mt-2 text-gray-700 text-sm/5">ACME virtual assistant is here for you 24/7. Our human team will get back to you within 48 hours.</p>
+                    <h2 className="mt-4 text-lg font-bold">Messages</h2>
+                    <div className="flex gap-2 mt-2">
                         <FilterButton
                             selected={activeFilter === 'active'}
                             onToggle={() => setActiveFilter('active')}
@@ -109,43 +112,43 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                 {(currentConversations.length === 0) ? (
                     <EmptyInbox />
                 ) : (
-                    <div className="flex-1 mt-6 overflow-y-auto">
-                        <AnimatePresence mode="popLayout">
-                            {currentConversations.map((conversation) => (
-                                <motion.div
-                                    key={conversation.id}
-                                    initial={{ opacity: 0, }}
-                                    animate={{
-                                        opacity: 1,
-                                        scale: 1,
-                                        transition: {
-                                            type: "spring",
-                                            bounce: 0.3
-                                        }
-                                    }}
-                                    exit={{ opacity: 0 }}
-                                    layout
-                                    transition={{
-                                        layout: { type: "spring", bounce: 0.1 },
-                                        duration: 0.2
-                                    }}
-                                >
-                                    <InboxItem
-                                        conversation={conversation}
-                                        onClick={() => handleConversationClick(conversation.id)}
-                                    />
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </div>
+                    <AnimatePresence mode="popLayout">
+                        {currentConversations.map((conversation) => (
+                            <motion.div
+                                key={conversation.id}
+                                initial={{ opacity: 0, }}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                    transition: {
+                                        type: "spring",
+                                        bounce: 0.3
+                                    }
+                                }}
+                                exit={{ opacity: 0 }}
+                                layout
+                                transition={{
+                                    layout: { type: "spring", bounce: 0.1 },
+                                    duration: 0.2
+                                }}
+                            >
+                                <InboxItem
+                                    conversation={conversation}
+                                    onClick={() => handleConversationClick(conversation.id)}
+                                />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 )}
 
-                <button
-                    onClick={handleNewConversation}
-                    className="absolute p-3 transition-transform rounded-lg shadow-lg cursor-pointer bottom-4 right-4 bg-primary text-primary-foreground hover:scale-105"
-                >
-                    <SquarePen className="w-6 h-6" />
-                </button>
+                {config.viewMode == 'chat' && (
+                    <button
+                        onClick={handleNewConversation}
+                        className="absolute p-3 transition-transform rounded-lg shadow-lg cursor-pointer bottom-4 right-4 bg-primary text-primary-foreground hover:scale-105"
+                    >
+                        <SquarePen className="w-6 h-6" />
+                    </button>
+                )}
             </div>
         </div>
     )

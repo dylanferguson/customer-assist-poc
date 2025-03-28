@@ -35,13 +35,12 @@ export const InboxItem: React.FC<InboxItemProps> = ({
         <>
             <div className="relative group">
                 <button
-                    className="relative w-full px-4 py-3 text-left cursor-pointer hover:bg-accent/90 [&:has(button:hover)]:hover:bg-transparent"
+                    className="relative w-full px-4 py-3 text-left cursor-pointer hover:bg-accent/90 [&:has(button:hover)]:hover:bg-transparent rounded-md"
                     role="listitem"
                     aria-label={`Conversation about ${conversation.title}`}
                     onClick={onClick}
                 >
                     <div className="flex items-center gap-3">
-                        {/* Avatar with unread indicator */}
                         <div className="relative">
                             {conversation.unread_count > 0 && (
                                 <div
@@ -57,8 +56,6 @@ export const InboxItem: React.FC<InboxItemProps> = ({
                                 )}
                             </div>
                         </div>
-
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                             <span className="block mb-1 text-xs text-gray-500">
                                 {conversation.lastMessage?.createdAt ?
@@ -76,7 +73,6 @@ export const InboxItem: React.FC<InboxItemProps> = ({
 
                     </div>
                 </button>
-                {/* Item actions */}
                 <div className="absolute -translate-y-1/2 right-2 top-1/2">
                     <InboxActionsPopover
                         onArchiveClick={onArchiveToggle}
@@ -84,7 +80,7 @@ export const InboxItem: React.FC<InboxItemProps> = ({
                     />
                 </div>
             </div>
-            <div className="h-px mx-4 bg-gray-200" role="separator" />
+            <div className="h-px bg-gray-100/50" role="separator" />
         </>
     )
 } 

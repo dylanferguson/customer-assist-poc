@@ -25,7 +25,7 @@ export function ChatProviders({ children, config }: ChatProvidersProps) {
                         <TooltipProvider>
                             {children}
                             <Toaster position="top-right" richColors />
-                            {/* <ReactQueryDevtools  initialIsOpen={false} buttonPosition="bottom-left" /> */}
+                            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
                         </TooltipProvider>
                     </SocketProvider>
                 </QueryClientProvider>

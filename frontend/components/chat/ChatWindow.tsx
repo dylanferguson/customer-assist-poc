@@ -76,7 +76,7 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
                     <X className="w-4 h-4" />
                 </Button>
             </div>
-            <div className="flex flex-1 h-full">
+            <div className="flex flex-1 h-full overflow-y-auto scrollbar-thin">
                 {createConversation.isPending ? (
                     <div className="flex flex-col items-center justify-center flex-1 p-4">
                         <Spinner />
@@ -88,7 +88,7 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
                             <Conversation conversationId={selectedConversation} />
                         </div>
                     ) : showInbox ? (
-                        <div className="flex flex-1 duration-300 animate-in fade-in">
+                        <div className="duration-300 animate-in fade-in">
                             <Inbox onSelectConversation={setSelectedConversation} />
                         </div>
                     ) : (
