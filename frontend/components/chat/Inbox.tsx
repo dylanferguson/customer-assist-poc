@@ -92,9 +92,8 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
 
     if (isLoading || createConversation.isPending) {
         return (
-            <div className="flex flex-col items-center justify-center flex-1 h-full p-4">
+            <div className="flex flex-col items-center justify-center flex-1 h-[calc(100%-40px)]">
                 <Spinner />
-                <p className="mt-2 text-sm text-muted-foreground">{isLoading ? 'Loading conversations...' : 'Starting new chat...'}</p>
             </div>
         )
     }
