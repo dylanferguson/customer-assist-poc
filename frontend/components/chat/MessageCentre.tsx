@@ -1,3 +1,5 @@
+'use client'
+
 import { Inbox as InboxIcon } from 'lucide-react';
 import { ChatProviders } from './ChatProviders';
 import { Inbox } from './Inbox';
@@ -17,7 +19,7 @@ function MessageContent() {
             <div className="p-4 overflow-y-auto border border-gray-100 rounded-md scrollbar-thin">
                 <div className="flex items-center gap-2 mb-2">
                     <InboxIcon className="w-6 h-6" />
-                    <h2 className="text-lg font-semibold">Inbox</h2>
+                    <h2 className="text-2xl font-semibold">Inbox</h2>
                 </div>
                 <Inbox
                     onSelectConversation={setSelectedConversationId}

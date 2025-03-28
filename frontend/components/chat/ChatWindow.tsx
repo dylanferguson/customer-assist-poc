@@ -8,7 +8,7 @@ import { useSocket } from "@/context/SocketContext"
 import { useMessagingService } from "@/hooks/useMessagingService"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
-
+import { useAppState } from "@/context/AppStateContext"
 
 type ChatProps = {
     toggleChat: () => void
@@ -16,7 +16,8 @@ type ChatProps = {
 }
 
 export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
-    const [showInbox, setShowInbox] = useState(false);
+    const { state, updateState } = useAppState();
+    const [showInbox, setShowInbox] = useState(state.hasActiveSession);
     const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
     const { connect, isConnected } = useSocket();
     const { useCreateConversation } = useMessagingService();
@@ -28,6 +29,7 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
     });
 
     const handleStartConversation = async () => {
+        updateState({ hasActiveSession: true })
         // Initialize socket when conversation starts
         if (!isConnected) {
             connect()

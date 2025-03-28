@@ -1,35 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChatWindow } from "./ChatWindow"
 import { ChatFab } from "./FAB"
 import { ChatProviders } from "./ChatProviders"
+import { useAppState } from "@/context/AppStateContext"
 
 type ChatProps = {
   mode?: 'single-threaded' | 'multi-threaded'
 }
 
-export function Chat({ mode = 'multi-threaded' }: ChatProps) {
+
+export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
+  const { state, updateState } = useAppState()
   const [isOpen, setIsOpen] = useState(false)
 
-  const chatConfig = {
-    viewMode: 'chat' as const,
-    threadMode: mode,
-  }
+  useEffect(() => {
+    setIsOpen(state.chatOpen)
+  }, [state.chatOpen])
 
   const toggleChat = () => {
+    updateState({ chatOpen: !isOpen })
     setIsOpen(!isOpen)
   }
 
   return (
-    <ChatProviders config={chatConfig}>
-      <div className="fixed z-50 bottom-4 right-4">
-        {isOpen ? (
-          <ChatWindow toggleChat={toggleChat} mode={mode} />
-        ) : (
-          <ChatFab onClick={toggleChat} />
-        )}
-      </div>
+    <div className="fixed z-50 bottom-4 right-4">
+      {isOpen ? (
+        <ChatWindow toggleChat={toggleChat} mode={mode} />
+      ) : (
+        <ChatFab onClick={toggleChat} />
+      )}
+    </div>
+
+  )
+}
+
+export function Chat({ mode = 'multi-threaded' }: ChatProps) {
+  return (
+    <ChatProviders config={{ viewMode: 'chat', threadMode: mode }}>
+      <ChatContainer />
     </ChatProviders>
   )
 }

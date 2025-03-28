@@ -328,7 +328,6 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             <div className="flex items-center justify-center w-full h-full">
                 <div className="text-center">
                     <Spinner />
-                    <p className="text-sm text-gray-500">Loading messages...</p>
                 </div>
             </div>
         );
