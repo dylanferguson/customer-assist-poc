@@ -57,6 +57,7 @@ const EmptyInbox = ({ messageType }: EmptyInboxProps) => {
 const Inbox = ({ onSelectConversation }: InboxProps) => {
     const [activeFilter, setActiveFilter] = useState<'active' | 'archived'>('active')
     const { useConversations, useCreateConversation } = useMessagingService()
+    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(undefined)
     const config = useConfig()
 
     // Query conversations with archived filter
@@ -72,6 +73,7 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
     const currentConversations = conversationList?.conversations || []
 
     const handleConversationClick = (id: string) => {
+        setSelectedConversationId(id)
         onSelectConversation?.(id)
     }
 
@@ -137,6 +139,7 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                                 }}
                             >
                                 <InboxItem
+                                    selected={conversation.id === selectedConversationId}
                                     conversation={conversation}
                                     onClick={() => handleConversationClick(conversation.id)}
                                 />

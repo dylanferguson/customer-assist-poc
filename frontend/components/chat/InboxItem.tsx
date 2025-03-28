@@ -6,18 +6,22 @@ import { ConversationList } from "../../api/messagingServiceClient"
 import { InboxActionsPopover } from "./conversation/InboxActionsPopover"
 import { useMessagingService } from "../../hooks/useMessagingService"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 interface InboxItemProps {
     conversation: ConversationList['conversations'][number]
+    selected?: boolean
     onClick?: () => void
 }
 
 export const InboxItem: React.FC<InboxItemProps> = ({
     conversation,
+    selected,
     onClick
 }) => {
     const { useUpdateConversation } = useMessagingService()
     const updateConversation = useUpdateConversation({
         onError: (error) => {
+            console.error('Error updating conversation:', error)
             toast.error('Error updating conversation:', { description: 'Please try again later' })
         }
     })
@@ -35,7 +39,7 @@ export const InboxItem: React.FC<InboxItemProps> = ({
         <>
             <div className="relative group">
                 <button
-                    className="relative w-full px-4 py-3 text-left cursor-pointer hover:bg-accent/90 [&:has(button:hover)]:hover:bg-transparent rounded-md"
+                    className={cn("relative w-full px-4 py-3 text-left cursor-pointer hover:bg-accent/90 [&:has(button:hover)]:hover:bg-transparent rounded-md", selected && "bg-accent/90")}
                     role="listitem"
                     aria-label={`Conversation about ${conversation.title}`}
                     onClick={onClick}

@@ -3,12 +3,14 @@ import { ChatProviders } from './ChatProviders';
 import { Inbox } from './Inbox';
 import { Conversation } from './Conversation';
 import { useMessagingService } from '@/hooks/useMessagingService';
+import { useState } from 'react';
 
 function MessageContent() {
     const { useConversations } = useMessagingService();
     const { data: conversations } = useConversations();
-
-    const conversationId = conversations?.conversations?.[0]?.id;
+    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(
+        conversations?.conversations?.[0]?.id
+    );
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-[calc(100vh-80px)] gap-4 border-t border-gray-100 p-4">
@@ -17,14 +19,14 @@ function MessageContent() {
                     <InboxIcon className="w-6 h-6" />
                     <h2 className="text-lg font-semibold">Inbox</h2>
                 </div>
-                <Inbox />
+                <Inbox
+                    onSelectConversation={setSelectedConversationId}
+                />
             </div>
             <div className="overflow-y-auto scrollbar-thin">
-                {
-                    conversationId && (
-                        <Conversation conversationId={conversationId} />
-                    )
-                }
+                {selectedConversationId && (
+                    <Conversation conversationId={selectedConversationId} />
+                )}
             </div>
         </div>
     );
