@@ -19,7 +19,7 @@ function MessageContent() {
                 </div>
                 <Inbox />
             </div>
-            <div>
+            <div className="overflow-y-auto scrollbar-thin">
                 {
                     conversationId && (
                         <Conversation conversationId={conversationId} />

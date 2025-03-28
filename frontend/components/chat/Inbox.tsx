@@ -16,11 +16,15 @@ export interface InboxProps {
     onSelectConversation?: (id: string) => void
 }
 
-const EmptyInbox = () => {
+interface EmptyInboxProps {
+    messageType: 'active' | 'archived'
+}
+
+const EmptyInbox = ({ messageType }: EmptyInboxProps) => {
     return (
         <div className="flex-1">
             <div className="mt-4 mb-10">
-                <p className="font-medium text-gray-900">You have no conversations.</p>
+                <p className="font-medium text-gray-900">You have no {messageType} conversations.</p>
             </div>
 
             <div>
@@ -110,7 +114,7 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                 </div>
 
                 {(currentConversations.length === 0) ? (
-                    <EmptyInbox />
+                    <EmptyInbox messageType={activeFilter} />
                 ) : (
                     <AnimatePresence mode="popLayout">
                         {currentConversations.map((conversation) => (
