@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Spinner } from '../ui/spinner';
 import { format } from 'date-fns';
 import { Bot, UserRound, Send, Plus, MapPin, File } from 'lucide-react';
@@ -13,6 +13,101 @@ interface MessageWithStatus extends Message {
     pending?: boolean;
     error?: boolean;
 }
+
+// Create a new memoized component for the messages list
+const MessagesList = memo(({
+    messages,
+    isAgentTyping
+}: {
+    messages: MessageWithStatus[],
+    isAgentTyping: boolean
+}) => {
+    return (
+        <div className="space-y-[2px]">
+            {messages.map((message, index) => {
+                // Check if this message is from the same sender as the previous one
+                const previousMessage = index > 0 ? messages[index - 1] : null;
+                const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                const lastMessage = index === messages.length - 1;
+
+                // Check if this is the last message from this sender in a consecutive group
+                const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
+                const isFirstInGroup = !previousMessage || previousMessage.participantRole !== message.participantRole;
+
+                return (
+                    <div
+                        key={message.id}
+                        className={`${isLastInGroup ? 'mb-4' : ''}`}
+                        role="article"
+                        aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
+                    >
+
+                        <div
+                            className='grid grid-cols-[auto_1fr] gap-2'
+                        >
+                            <div className='w-10'>
+                                {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
+                                    <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
+                                        {message.participantRole === 'AGENT' ? (
+                                            <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                        ) : (
+                                            <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
+                                {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
+                                    <div className="mb-1 text-xs text-gray-500">
+                                        {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
+                                    </div>
+                                )}
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <div
+                                            tabIndex={0}
+                                            className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
+                                                ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                                : 'bg-gray-100 text-black'
+                                                }`}
+                                        >
+                                            <div className="text-left break-words">{message.content}</div>
+                                            <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                {lastMessage && message.participantRole !== 'CUSTOMER' && (
+                                                    <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                                )}
+                                                {message.error && (
+                                                    <span className="flex items-center ml-2 text-red-400">
+                                                        Not delivered
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent aria-label="Message sent at">
+                                        <p>{format(new Date(message.createdAt), "HH:mm")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
+            {isAgentTyping && (
+                <div
+                    className={`grid grid-cols-[auto_1fr] gap-2`}
+                >
+                    <div className='w-10'></div>
+                    <div className="flex items-center gap-2">
+                        <TypingIndicator />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+
+MessagesList.displayName = 'MessagesList';
 
 export const Conversation = ({ conversationId }: { conversationId: string }) => {
     const [messageInput, setMessageInput] = useState('');
@@ -242,90 +337,8 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                     <div className="mb-4 text-sm font-semibold text-center text-gray-500">
                         {format(new Date(conversation.createdAt), "dd MMMM, yyyy, h:mmaaa")}
                     </div>
-
-                    <div className="space-y-[2px]">
-                        {messages.map((message, index) => {
-                            // Check if this message is from the same sender as the previous one
-                            const previousMessage = index > 0 ? messages[index - 1] : null;
-                            const isSameSender = previousMessage && previousMessage.participantRole === message.participantRole;
-
-                            const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
-                            const lastMessage = index === messages.length - 1;
-                            // Check if this is the last message from this sender in a consecutive group
-                            const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
-                            const isFirstInGroup = !previousMessage || previousMessage.participantRole !== message.participantRole;
-
-                            return (
-                                <div
-                                    key={message.id}
-                                    className={`${isLastInGroup ? 'mb-4' : ''}`}
-                                    role="article"
-                                    aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
-                                >
-
-                                    <div
-                                        className='grid grid-cols-[auto_1fr] gap-2'
-                                    >
-                                        <div className='w-10'>
-                                            {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
-                                                <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
-                                                    {message.participantRole === 'AGENT' ? (
-                                                        <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                                    ) : (
-                                                        <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
-                                            {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
-                                                <div className="mb-1 text-xs text-gray-500">
-                                                    {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
-                                                </div>
-                                            )}
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <div
-                                                        tabIndex={0}
-                                                        className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
-                                                            ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
-                                                            : 'bg-gray-100 text-black'
-                                                            }`}
-                                                    >
-                                                        <div className="text-left break-words">{message.content}</div>
-                                                        <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
-                                                            {lastMessage && message.participantRole !== 'CUSTOMER' && (
-                                                                <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
-                                                            )}
-                                                            {message.error && (
-                                                                <span className="flex items-center ml-2 text-red-400">
-                                                                    Not delivered
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent aria-label="Message sent at">
-                                                    <p>{format(new Date(message.createdAt), "HH:mm")}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {isAgentTyping && (
-                            <div
-                                className={`grid grid-cols-[auto_1fr] gap-2`}
-                            >
-                                <div className='w-10'></div>
-                                <div className="flex items-center gap-2">
-                                    <TypingIndicator />
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
+                    <MessagesList messages={messages} isAgentTyping={isAgentTyping} />
+                    <div ref={messagesEndRef} />
                 </div>
             </div>
 
