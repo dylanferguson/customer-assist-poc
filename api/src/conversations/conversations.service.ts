@@ -44,9 +44,6 @@ export class ConversationsService {
       archivedAt: null,
     };
 
-    this.conversations.push(conversation);
-    this.messages[conversation.id] = [];
-
     const connectSession = await this.amazonConnectService.startChat({
       customerDisplayName: 'Customer',
       attributes: {
@@ -58,6 +55,8 @@ export class ConversationsService {
       participantToken: connectSession.ParticipantToken,
     });
 
+    this.conversations.push(conversation);
+    this.messages[conversation.id] = [];
     this.connectSessions[conversation.id] = {
       participantToken: connectSession.ParticipantToken,
       connectionToken: participantConnection?.ConnectionCredentials?.ConnectionToken
@@ -188,11 +187,6 @@ export class ConversationsService {
       this.messages[conversationId] = [];
     }
 
-    this.messages[conversationId].push(message);
-
-    conversation.updatedAt = new Date();
-    conversation.unread_count += 1;
-
     try {
       const session = this.connectSessions[conversationId];
 
@@ -205,6 +199,12 @@ export class ConversationsService {
         content: message.content,
         contentType: 'text/plain',
       });
+
+      this.messages[conversationId].push(message);
+
+      conversation.updatedAt = new Date();
+      conversation.unread_count += 1;
+
       this.logger.log(`Message sent to Amazon Connect for conversation ${conversationId}`);
     } catch (error) {
       this.logger.error(`Failed to send message to Amazon Connect: ${error.message}`, error.stack);
