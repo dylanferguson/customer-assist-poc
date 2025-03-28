@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Spinner } from '../ui/spinner';
 import { format, isSameDay } from 'date-fns';
-import { Bot, UserRound, Send, Plus, MapPin, File } from 'lucide-react';
+import { Bot, UserRound, Send } from 'lucide-react';
 import { useMessagingService } from '../../hooks/useMessagingService';
 import { useSocket } from '../../context/SocketContext';
 import { Message, TypingEvent } from '../../api/messagingServiceClient';
@@ -11,7 +11,7 @@ import { ChatActionsPopover } from './conversation/ChatActionsPopover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useConfig } from '@/context/ConfigContext';
-
+import { useAppState } from '@/context/AppStateContext';
 interface MessageWithStatus extends Message {
     pending?: boolean;
     error?: boolean;
@@ -145,6 +145,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { subscribeToConversation, socket, isConnected } = useSocket();
     const config = useConfig();
+    const { updateAppState } = useAppState();
 
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -153,7 +154,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     const {
         data: messagesData,
-        isLoading: isLoadingMessages
+        isLoading: isLoadingMessages,
     } = useMessages(conversationId);
 
     const { mutate: sendMessage } = useSendMessage({
@@ -235,6 +236,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     useEffect(() => {
         if (messagesData?.data && messagesData.data.length > 0) {
             setMessages(messagesData.data);
+            updateAppState({ activeConversationId: conversationId });
         }
     }, [messagesData]);
 
@@ -340,7 +342,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     return (
         <div className="relative flex flex-col h-full border border-gray-100 rounded-md">
             <div className="flex flex-col flex-1 min-h-0">
-                <div className={`flex-1 overflow-y-auto ${config.viewMode == 'chat' ? 'max-h-[552px]' : ''} pr-2 scrollbar-thin`}>
+                <div className={`flex-1 overflow-y-auto ${config.viewMode == 'chat' ? 'max-h-[552px]' : ''} scrollbar-thin`}>
                     <div className="p-4 mt-2 text-sm">
                         <p className="text-center text-gray-500">
                             Privacy Notice: Messages in this conversation may be reviewed for training and quality improvement purposes.

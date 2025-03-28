@@ -16,12 +16,13 @@ type ChatProps = {
 }
 
 export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
-    const { state, updateState } = useAppState();
-    const [showInbox, setShowInbox] = useState(state.hasActiveSession);
-    const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+    const { appState, updateAppState } = useAppState();
+    const [showInbox, setShowInbox] = useState(appState.hasActiveSession);
+    const [selectedConversation, setSelectedConversation] = useState<string | undefined>(appState.activeConversationId);
     const { connect, isConnected } = useSocket();
     const { useCreateConversation } = useMessagingService();
     const createConversation = useCreateConversation({
+
         onError(error) {
             toast.error('Error creating conversation', { description: 'Please try again later' })
             console.error('Error creating conversation:', error)
@@ -29,7 +30,8 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
     });
 
     const handleStartConversation = async () => {
-        updateState({ hasActiveSession: true })
+        updateAppState({ hasActiveSession: true })
+
         // Initialize socket when conversation starts
         if (!isConnected) {
             connect()

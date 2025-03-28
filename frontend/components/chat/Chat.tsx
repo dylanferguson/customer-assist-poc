@@ -13,7 +13,7 @@ type ChatProps = {
 
 
 export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
-  const { state, updateState } = useAppState()
+  const { appState: state, updateAppState } = useAppState()
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
   }, [state.chatOpen])
 
   const toggleChat = () => {
-    updateState({ chatOpen: !isOpen })
+    updateAppState({ chatOpen: !isOpen })
     setIsOpen(!isOpen)
   }
 
@@ -29,7 +29,7 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
 
     <AnimatePresence >
       {isOpen ? (
-        <div className="fixed z-51 bottom-8 right-8">
+        <div className="fixed z-1 bottom-8 right-8">
           <motion.div
             key="chat"
             initial={{ opacity: 0, scale: 0.2, transformOrigin: 'bottom right' }}
@@ -56,7 +56,7 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
           </motion.div>
         </div>
       ) : (
-        <div className="fixed z-50 bottom-8 right-8">
+        <div className="fixed z-1 bottom-8 right-8">
           <motion.div
             key="fab"
             initial={{ opacity: 0, scale: 0.3 }}

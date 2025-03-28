@@ -5,14 +5,18 @@ import { ChatProviders } from './ChatProviders';
 import { Inbox } from './Inbox';
 import { Conversation } from './Conversation';
 import { useMessagingService } from '@/hooks/useMessagingService';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAppState } from '@/context/AppStateContext';
 
 function MessageContent() {
     const { useConversations } = useMessagingService();
     const { data: conversations } = useConversations();
-    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(
-        conversations?.conversations?.[0]?.id
-    );
+    const { appState } = useAppState()
+    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
+
+    useEffect(() => {
+        setSelectedConversationId(appState.activeConversationId || conversations?.conversations?.[0]?.id)
+    }, [])
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-[calc(100vh-80px)] gap-4 border-t border-gray-100 p-4">

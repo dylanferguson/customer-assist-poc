@@ -1,7 +1,7 @@
 'use client'
 
 import { Spinner } from "../ui/spinner"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { SquarePen, Calendar, HelpCircle, Search, MessageCircle, Archive } from "lucide-react"
 import { LinkCard } from "../ui/link-card"
 import { InboxItem } from "./InboxItem"
@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { useConfig } from "@/context/ConfigContext"
 import { cn } from "@/lib/utils"
-
+import { useAppState } from "@/context/AppStateContext"
 export interface InboxProps {
     onSelectConversation?: (id: string) => void
 }
@@ -58,7 +58,8 @@ const EmptyInbox = ({ messageType }: EmptyInboxProps) => {
 const Inbox = ({ onSelectConversation }: InboxProps) => {
     const [activeFilter, setActiveFilter] = useState<'active' | 'archived'>('active')
     const { useConversations, useCreateConversation } = useMessagingService()
-    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(undefined)
+    const { updateAppState, appState } = useAppState()
+    const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(appState.activeConversationId)
     const config = useConfig()
 
     // Query conversations with archived filter
@@ -82,6 +83,12 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
         const newConversation = await createConversation.mutateAsync({})
         onSelectConversation?.(newConversation?.id)
     }
+
+    useEffect(() => {
+        if (config.viewMode == 'chat') {
+            updateAppState({ activeConversationId: undefined })
+        }
+    }, [])
 
     if (isLoading || createConversation.isPending) {
         return (

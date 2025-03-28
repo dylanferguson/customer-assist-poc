@@ -8,6 +8,7 @@ const CURRENT_VERSION = 1
 
 const AppStateSchema = z.object({
     hasActiveSession: z.boolean(),
+    activeConversationId: z.string().optional(),
     chatOpen: z.boolean(),
     version: z.literal(CURRENT_VERSION)
 })
@@ -16,19 +17,20 @@ type AppState = z.infer<typeof AppStateSchema>
 
 const initialState: AppState = {
     chatOpen: false,
+    activeConversationId: undefined,
     hasActiveSession: false,
     version: CURRENT_VERSION
 }
 
 interface AppStateContextType {
-    state: AppState
-    updateState: (updates: Partial<AppState>) => void
+    appState: AppState
+    updateAppState: (updates: Partial<AppState>) => void
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined)
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-    const [state, setState] = useState<AppState>(() => {
+    const [appState, setAppState] = useState<AppState>(() => {
         if (typeof window === 'undefined') {
             return initialState
         }
@@ -50,19 +52,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            sessionStorage.setItem(STORAGE_NAMESPACE, JSON.stringify(state))
+            sessionStorage.setItem(STORAGE_NAMESPACE, JSON.stringify(appState))
         }
-    }, [state])
+    }, [appState])
 
-    const updateState = (updates: Partial<AppState>) => {
-        setState(current => ({
+    const updateAppState = (updates: Partial<AppState>) => {
+        setAppState(current => ({
             ...current,
             ...updates
         }))
     }
 
     return (
-        <AppStateContext.Provider value={{ state, updateState }}>
+        <AppStateContext.Provider value={{ appState: appState, updateAppState }}>
             {children}
         </AppStateContext.Provider>
     )
