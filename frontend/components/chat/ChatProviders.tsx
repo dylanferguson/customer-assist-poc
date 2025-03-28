@@ -7,6 +7,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { ReactNode } from "react"
 import { Toaster } from "sonner"
 import { Config, ConfigProvider } from '@/context/ConfigContext'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const queryClient = new QueryClient()
 
@@ -24,6 +25,7 @@ export function ChatProviders({ children, config }: ChatProvidersProps) {
                         <TooltipProvider>
                             {children}
                             <Toaster position="top-right" richColors />
+                            {/* <ReactQueryDevtools  initialIsOpen={false} buttonPosition="bottom-left" /> */}
                         </TooltipProvider>
                     </SocketProvider>
                 </QueryClientProvider>
