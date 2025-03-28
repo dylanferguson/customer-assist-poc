@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useConfig } from '@/context/ConfigContext';
 import { useAppState } from '@/context/AppStateContext';
+import { redact } from '../../utils/redaction';
 
 interface MessageWithStatus extends Message {
     pending?: boolean;
@@ -201,10 +202,12 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
         if (!messageInput.trim() || !conversationId) return;
 
+        const redactedMessage = redact(messageInput.trim());
+
         sendMessage({
             conversationId,
             data: {
-                content: messageInput.trim(),
+                content: redactedMessage,
                 contentType: 'plain_text'
             }
         });
