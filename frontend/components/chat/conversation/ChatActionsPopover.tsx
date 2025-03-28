@@ -26,7 +26,7 @@ export function ChatActionsPopover({ onLocationClick, onFileClick, onImageClick 
                     <Plus className={`w-4 h-4 text-white transition-transform duration-200 ${open ? 'rotate-45' : ''}`} />
                 </div>
             </PopoverTrigger>
-            <PopoverContent className="w-30" align="start">
+            <PopoverContent className="w-30" align="start" side="top">
                 <div className="flex flex-col gap-3">
                     <PopoverActionButton
                         icon={<MapPin className="w-4 h-4" />}
