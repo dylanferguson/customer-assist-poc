@@ -4,6 +4,7 @@ import React, { createContext, useContext, ReactNode, useState, useEffect, useRe
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { Message, TypingEvent } from '@/api/messagingServiceClient'
+import { useConfig } from './ConfigContext'
 
 interface SocketContextType {
     socket: Socket | null
@@ -39,6 +40,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const socketRef = useRef<Socket | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [socketAuthenticated, setSocketAuthenticated] = useState(false)
+    const config = useConfig()
 
     // Keep track of conversation subscriptions
     const conversationSubscribersRef = useRef<{
@@ -61,8 +63,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const connect = () => {
         if (!socketRef.current) {
-            socketRef.current = io(process.env.NEXT_PUBLIC_API_URL, {
-                path: process.env.NEXT_PUBLIC_SOCKET_PATH,
+            socketRef.current = io(config.apiUrl, {
+                path: config.socketPath,
             })
 
             socketRef.current.on('connect', () => {

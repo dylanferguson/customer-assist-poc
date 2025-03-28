@@ -19,7 +19,6 @@ export default function LoginPage() {
           ACME Inc.
         </a>
         <LoginForm onLogin={() => {
-          console.log('login')
           router.push('/dashboard')
         }} />
       </div>

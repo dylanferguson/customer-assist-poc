@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { ReactNode } from "react"
 import { Toaster } from "sonner"
+import { ConfigProvider } from '@/context/ConfigContext'
 
 const queryClient = new QueryClient()
 
@@ -15,15 +16,17 @@ type ChatProvidersProps = {
 
 export function ChatProviders({ children }: ChatProvidersProps) {
     return (
-        <AuthProvider>
-            <QueryClientProvider client={queryClient}>
-                <SocketProvider>
-                    <TooltipProvider>
-                        {children}
-                        <Toaster position="top-right" richColors />
-                    </TooltipProvider>
-                </SocketProvider>
-            </QueryClientProvider>
-        </AuthProvider>
+        <ConfigProvider>
+            <AuthProvider>
+                <QueryClientProvider client={queryClient}>
+                    <SocketProvider>
+                        <TooltipProvider>
+                            {children}
+                            <Toaster position="top-right" richColors />
+                        </TooltipProvider>
+                    </SocketProvider>
+                </QueryClientProvider>
+            </AuthProvider>
+        </ConfigProvider>
     )
 } 
