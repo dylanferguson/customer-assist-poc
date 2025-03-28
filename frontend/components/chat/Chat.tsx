@@ -29,7 +29,7 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
 
     <AnimatePresence >
       {isOpen ? (
-        <div className="fixed z-1 bottom-8 right-8">
+        <div className="fixed z-40 bottom-8 right-8">
           <motion.div
             key="chat"
             initial={{ opacity: 0, scale: 0.2, transformOrigin: 'bottom right' }}
@@ -56,7 +56,7 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
           </motion.div>
         </div>
       ) : (
-        <div className="fixed z-1 bottom-8 right-8">
+        <div className="fixed z-40 bottom-8 right-8">
           <motion.div
             key="fab"
             initial={{ opacity: 0, scale: 0.3 }}

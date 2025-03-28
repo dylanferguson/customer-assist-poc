@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { X, ArrowLeft } from "lucide-react"
 import { WelcomeScreen } from "./WelcomeScreen"
 import { Inbox } from "./Inbox"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Conversation } from "./Conversation"
 import { useSocket } from "@/context/SocketContext"
 import { useMessagingService } from "@/hooks/useMessagingService"
@@ -22,7 +22,6 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
     const { connect, isConnected } = useSocket();
     const { useCreateConversation } = useMessagingService();
     const createConversation = useCreateConversation({
-
         onError(error) {
             toast.error('Error creating conversation', { description: 'Please try again later' })
             console.error('Error creating conversation:', error)
@@ -32,7 +31,6 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
     const handleStartConversation = async () => {
         updateAppState({ hasActiveSession: true })
 
-        // Initialize socket when conversation starts
         if (!isConnected) {
             connect()
         }
@@ -44,6 +42,12 @@ export const ChatWindow = ({ toggleChat, mode }: ChatProps) => {
             setSelectedConversation(newConversation.id)
         }
     }
+
+    useEffect(() => {
+        if (appState.hasActiveSession && !isConnected) {
+            connect()
+        }
+    }, [])
 
     const handleBackClick = () => {
         if (selectedConversation) {
