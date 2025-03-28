@@ -2,7 +2,7 @@ import { Spinner } from "../ui/spinner"
 import { useState } from "react"
 import { SquarePen, Calendar, HelpCircle, Search, MessageCircle, Archive } from "lucide-react"
 import { LinkCard } from "../ui/link-card"
-import { ConversationListItem } from "./ConversationListItem"
+import { InboxItem } from "./ConversationListItem"
 import { FilterButton } from "../ui/filter-button"
 import { useMessagingService } from "../../hooks/useMessagingService"
 import { toast } from "sonner"
@@ -108,7 +108,7 @@ const Inbox = ({ onSelectConversation }: InboxProps) => {
                 ) : (
                     <div className="flex-1 mt-6 overflow-y-auto">
                         {currentConversations.map((conversation) => (
-                            <ConversationListItem
+                            <InboxItem
                                 key={conversation.id}
                                 conversation={conversation}
                                 onClick={() => handleConversationClick(conversation.id)}

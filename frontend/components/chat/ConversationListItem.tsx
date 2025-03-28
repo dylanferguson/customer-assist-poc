@@ -2,12 +2,12 @@ import { Bot, UserRound } from "lucide-react"
 import { format } from "date-fns"
 import { ConversationList } from "../../api/messagingServiceClient"
 
-interface ConversationListItemProps {
+interface InboxItemProps {
     conversation: ConversationList['conversations'][number]
     onClick?: () => void
 }
 
-export const ConversationListItem: React.FC<ConversationListItemProps> = ({
+export const InboxItem: React.FC<InboxItemProps> = ({
     conversation,
     onClick
 }) => {
