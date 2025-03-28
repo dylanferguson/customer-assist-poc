@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Spinner } from '../ui/spinner';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { Bot, UserRound, Send, Plus, MapPin, File } from 'lucide-react';
 import { useMessagingService } from '../../hooks/useMessagingService';
 import { useSocket } from '../../context/SocketContext';
@@ -36,64 +36,80 @@ const MessagesList = memo(({
                     const isLastInGroup = !nextMessage || nextMessage.participantRole !== message.participantRole;
                     const isFirstInGroup = !previousMessage || previousMessage.participantRole !== message.participantRole;
 
+                    // Check if date changed from previous message
+                    const showDateSeparator = index === 0 || (previousMessage &&
+                        !isSameDay(new Date(message.createdAt), new Date(previousMessage.createdAt)));
+
                     return (
                         <motion.div
-                            key={`${index}-${message.content.substring(0, 10)}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0, }}
-                            transition={{ duration: 0.2 }}
-                            className={`${isLastInGroup ? 'mb-4' : ''}`}
-                            role="article"
-                            aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
+                            key={`message-group-${index}`}
                         >
-                            <div
-                                className='grid grid-cols-[auto_1fr] gap-2'
+                            {showDateSeparator && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-4 text-sm font-semibold text-center text-gray-500"
+                                >
+                                    {format(new Date(message.createdAt), "dd MMMM yyyy, HH:mm")}
+                                </motion.div>
+                            )}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0, }}
+                                transition={{ duration: 0.2 }}
+                                className={`${isLastInGroup ? 'mb-4' : ''}`}
+                                role="article"
+                                aria-label={`Message from ${message.participantRole === 'CUSTOMER' ? 'you' : message.participantName}`}
                             >
-                                <div className='w-10'>
-                                    {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
-                                        <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
-                                            {message.participantRole === 'AGENT' ? (
-                                                <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                            ) : (
-                                                <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
-                                    {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
-                                        <div className="mb-1 text-xs text-gray-500">
-                                            {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
-                                        </div>
-                                    )}
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <div
-                                                tabIndex={0}
-                                                className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
-                                                    ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
-                                                    : 'bg-gray-100 text-black'
-                                                    }`}
-                                            >
-                                                <div className="text-left break-words">{message.content}</div>
-                                                <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
-                                                    {lastMessage && message.participantRole !== 'CUSTOMER' && (
-                                                        <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
-                                                    )}
-                                                    {message.error && (
-                                                        <span className="flex items-center ml-2 text-red-400">
-                                                            Not delivered
-                                                        </span>
-                                                    )}
-                                                </div>
+                                <div
+                                    className='grid grid-cols-[auto_1fr] gap-2'
+                                >
+                                    <div className='w-10'>
+                                        {message.participantRole !== 'CUSTOMER' && isLastInGroup && (
+                                            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
+                                                {message.participantRole === 'AGENT' ? (
+                                                    <UserRound className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                                ) : (
+                                                    <Bot className="w-5 h-5 text-gray-600" aria-hidden="true" />
+                                                )}
                                             </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent aria-label="Message sent at">
-                                            <p>{format(new Date(message.createdAt), "HH:mm")}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                        )}
+                                    </div>
+                                    <div className={`max-w-[90%] ${message.participantRole === 'CUSTOMER' ? 'justify-self-end' : 'justify-self-start'}`}>
+                                        {isFirstInGroup && ['AGENT', 'CUSTOM_BOT'].includes(message.participantRole) && (
+                                            <div className="mb-1 text-xs text-gray-500">
+                                                {message.participantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant'}
+                                            </div>
+                                        )}
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <div
+                                                    tabIndex={0}
+                                                    className={`inline-block rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary/50 ${message.participantRole === 'CUSTOMER'
+                                                        ? `bg-black text-white ${message.pending ? 'opacity-60' : ''}`
+                                                        : 'bg-gray-100 text-black'
+                                                        }`}
+                                                >
+                                                    <div className="text-left break-words">{message.content}</div>
+                                                    <div className="text-[10px] mt-1 opacity-70 flex items-center justify-between">
+                                                        {lastMessage && message.participantRole !== 'CUSTOMER' && (
+                                                            <span>{format(new Date(message.createdAt), "h:mmaaa")}</span>
+                                                        )}
+                                                        {message.error && (
+                                                            <span className="flex items-center ml-2 text-red-400">
+                                                                Not delivered
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent aria-label="Message sent at">
+                                                <p>{format(new Date(message.createdAt), "HH:mm")}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         </motion.div>
                     );
                 })}
@@ -343,9 +359,6 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                 </div>
 
                 <div className="p-3">
-                    <div className="mb-4 text-sm font-semibold text-center text-gray-500">
-                        {format(new Date(conversation.createdAt), "dd MMMM, yyyy, h:mmaaa")}
-                    </div>
                     <MessagesList messages={messages} isAgentTyping={isAgentTyping} />
                     <div ref={messagesEndRef} />
                 </div>
