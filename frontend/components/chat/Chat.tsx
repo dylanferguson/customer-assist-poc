@@ -5,6 +5,7 @@ import { ChatWindow } from "./ChatWindow"
 import { ChatFab } from "./FAB"
 import { ChatProviders } from "./ChatProviders"
 import { useAppState } from "@/context/AppStateContext"
+import { AnimatePresence, motion } from "framer-motion"
 
 type ChatProps = {
   mode?: 'single-threaded' | 'multi-threaded'
@@ -25,14 +26,64 @@ export function ChatContainer({ mode = 'multi-threaded' }: ChatProps) {
   }
 
   return (
-    <div className="fixed z-50 bottom-4 right-4">
-      {isOpen ? (
-        <ChatWindow toggleChat={toggleChat} mode={mode} />
-      ) : (
-        <ChatFab onClick={toggleChat} />
-      )}
-    </div>
 
+    <AnimatePresence >
+      {isOpen ? (
+        <div className="fixed z-51 bottom-8 right-8">
+          <motion.div
+            key="chat"
+            initial={{ opacity: 0, scale: 0.2, transformOrigin: 'bottom right' }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              transition: {
+                type: "spring",
+                stiffness: 200,
+                damping: 25,
+              }
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.2,
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+              }
+            }}
+          >
+            <ChatWindow toggleChat={toggleChat} mode={mode} />
+          </motion.div>
+        </div>
+      ) : (
+        <div className="fixed z-50 bottom-8 right-8">
+          <motion.div
+            key="fab"
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              type: 'spring',
+              stiffness: 400,
+              damping: 20,
+              mass: 1,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.2,
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+              }
+            }}
+          >
+
+            <ChatFab onClick={toggleChat} />
+          </motion.div>
+        </div>
+      )
+      }
+    </AnimatePresence >
   )
 }
 
