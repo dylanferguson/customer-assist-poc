@@ -162,7 +162,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                 setTimeout(scrollToBottom, 50);
                 setIsAgentTypingTimeout(setTimeout(() => {
                     setIsAgentTyping(false);
-                }, 5000));
+                }, 10000));
             }
         };
 
