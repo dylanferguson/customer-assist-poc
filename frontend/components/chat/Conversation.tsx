@@ -319,8 +319,9 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         );
     }
 
-    if (!messagesData) {
-        return <div>Conversation not found</div>;
+    if (!loading && !messagesData) {
+        toast.error('Error loading conversation', { description: 'Please try again later' });
+        return
     }
 
     return (
