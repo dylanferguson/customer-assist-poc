@@ -1,8 +1,10 @@
+'use client'
+
 import { Spinner } from "../ui/spinner"
 import { useState } from "react"
 import { SquarePen, Calendar, HelpCircle, Search, MessageCircle, Archive } from "lucide-react"
 import { LinkCard } from "../ui/link-card"
-import { InboxItem } from "./ConversationListItem"
+import { InboxItem } from "./InboxItem"
 import { FilterButton } from "../ui/filter-button"
 import { useMessagingService } from "../../hooks/useMessagingService"
 import { toast } from "sonner"
