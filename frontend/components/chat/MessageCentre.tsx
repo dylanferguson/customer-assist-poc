@@ -31,8 +31,13 @@ function MessageContent() {
 }
 
 export function MessageCentre() {
+    const messageCentreConfig = {
+        viewMode: 'message-centre' as const,
+        threadMode: 'multi-threaded' as const,
+    }
+
     return (
-        <ChatProviders>
+        <ChatProviders config={messageCentreConfig}>
             <MessageContent />
         </ChatProviders>
     )
