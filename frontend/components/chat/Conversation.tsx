@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useConfig } from '@/context/ConfigContext';
 import { useAppState } from '@/context/AppStateContext';
+
 interface MessageWithStatus extends Message {
     pending?: boolean;
     error?: boolean;
@@ -29,7 +30,6 @@ const MessagesList = memo(({
         <div className="space-y-[2px]">
             <AnimatePresence initial={false}>
                 {messages.map((message, index) => {
-                    // Check if this message is from the same sender as the previous one
                     const previousMessage = index > 0 ? messages[index - 1] : null;
                     const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
                     const lastMessage = index === messages.length - 1;
@@ -151,7 +151,6 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, []);
 
-
     const {
         data: messagesData,
         isLoading: isLoadingMessages,
@@ -159,7 +158,6 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
 
     const { mutate: sendMessage } = useSendMessage({
         onMutate: (newMessage) => {
-            // Create a temporary message with pending state
             const tempMessage: MessageWithStatus = {
                 id: `temp-${Date.now()}`,
                 conversationId: '',
@@ -171,21 +169,14 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
                 pending: true
             };
 
-            // Add to messages immediately for optimistic UI update
             setMessages(prevMessages => [...prevMessages, tempMessage]);
-
-            // Scroll to the new message
             setTimeout(scrollToBottom, 50);
-
-            // Return the temporary message to use in onSuccess
             return { tempMessage };
         },
         onSuccess: (response, _variables, context) => {
             if (!context) return;
 
             const { tempMessage } = context as { tempMessage: MessageWithStatus };
-
-            // Replace the temporary message with the server response
             setMessages(prevMessages =>
                 prevMessages.map(msg =>
                     msg.id === tempMessage.id ? response : msg
@@ -196,15 +187,11 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             if (!context) return;
 
             const { tempMessage } = context as { tempMessage: MessageWithStatus };
-
-            // Mark the message as failed
             setMessages(prevMessages =>
                 prevMessages.map(msg =>
                     msg.id === tempMessage.id ? { ...msg, pending: false, error: true } : msg
                 )
             );
-
-            // Optionally show an error message to the user
             toast.error('Failed to send message');
         }
     });
@@ -232,7 +219,6 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         }
     };
 
-    // Initialize messages from API data
     useEffect(() => {
         if (messagesData?.data && messagesData.data.length > 0) {
             setMessages(messagesData.data);
@@ -240,12 +226,10 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         }
     }, [messagesData]);
 
-    // Listen for new messages via WebSocket using our subscription system
     useEffect(() => {
         if (!socket || !isConnected) return;
 
         const handleNewMessage = (newMessage: Message) => {
-            // Add message to state if it doesn't exist already
             setIsAgentTyping(false);
             setMessages(prevMessages => {
                 // Skip if message already exists (by ID)

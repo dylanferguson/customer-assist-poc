@@ -12,6 +12,7 @@ import { ConnectWebsocketService } from './connect-websocket.service';
 import { ConversationsGateway } from './conversations.gateway';
 import { ConnectMessage, EVENT_CONTENT_TYPE } from './schemas/connect-message.schema';
 import { TypingEvent } from './entities/websocket.entity';
+
 @Injectable()
 export class ConversationsService {
   private conversations: Conversation[] = [];
@@ -46,7 +47,6 @@ export class ConversationsService {
     this.conversations.push(conversation);
     this.messages[conversation.id] = [];
 
-    // Start chat session with Amazon Connect
     const connectSession = await this.amazonConnectService.startChat({
       customerDisplayName: 'Customer',
       attributes: {
@@ -58,13 +58,11 @@ export class ConversationsService {
       participantToken: connectSession.ParticipantToken,
     });
 
-    // Store connection information
     this.connectSessions[conversation.id] = {
       participantToken: connectSession.ParticipantToken,
       connectionToken: participantConnection?.ConnectionCredentials?.ConnectionToken
     };
 
-    // Establish websocket connection
     if (participantConnection.Websocket.Url) {
       await this.connectWebsocketService.createWebsocketConnection(
         conversation.id,
@@ -82,12 +80,10 @@ export class ConversationsService {
   findAll(query: ConversationQueryDto) {
     let filteredConversations = [...this.conversations];
 
-    // Filter by archived status
     filteredConversations = filteredConversations.filter(
       (conv) => conv.archived === query.is_archived,
     );
 
-    // Apply cursor-based pagination
     if (query.cursor) {
       const cursorIndex = filteredConversations.findIndex(
         (conv) => conv.id === query.cursor,
@@ -97,17 +93,14 @@ export class ConversationsService {
       }
     }
 
-    // Apply sorting
     filteredConversations.sort((a, b) => {
       const dateA = new Date(a.updatedAt).getTime();
       const dateB = new Date(b.updatedAt).getTime();
       return query.order === 'asc' ? dateA - dateB : dateB - dateA;
     });
 
-    // Apply limit
     filteredConversations = filteredConversations.slice(0, query.limit);
 
-    // Format response with last message
     const conversationsWithLastMessage = filteredConversations.map((conv) => {
       const messages = this.messages[conv.id] || [];
       const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
@@ -117,7 +110,6 @@ export class ConversationsService {
       };
     });
 
-    // Create pagination links
     const lastConversation = filteredConversations[filteredConversations.length - 1];
     const nextCursor = lastConversation ? lastConversation.id : null;
 
@@ -198,11 +190,9 @@ export class ConversationsService {
 
     this.messages[conversationId].push(message);
 
-    // Update conversation
     conversation.updatedAt = new Date();
     conversation.unread_count += 1;
 
-    // Send message to Amazon Connect
     try {
       const session = this.connectSessions[conversationId];
 
@@ -245,7 +235,6 @@ export class ConversationsService {
     }
 
     if (isNonCustomerMessage) {
-      // Transform the Connect message to internal Message format
       const internalMessage: Message = {
         conversationId,
         id: `msg_${uuidv4()}`,
@@ -256,20 +245,17 @@ export class ConversationsService {
         participantName: message.ParticipantRole === 'AGENT' ? 'Agent' : 'Virtual Assistant',
       };
 
-      // Store the transformed message
       if (!this.messages[conversationId]) {
         this.messages[conversationId] = [];
       }
       this.messages[conversationId].push(internalMessage);
 
-      // Update conversation metadata
       const conversation = this.findOne(conversationId);
       if (conversation) {
         conversation.updatedAt = new Date();
         conversation.unread_count += 1;
       }
 
-      // Forward the transformed message to connected users via the gateway
       this.conversationsGateway.sendMessageToUser(userId, { type: 'message', data: internalMessage });
     }
 

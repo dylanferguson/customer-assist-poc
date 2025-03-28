@@ -25,23 +25,17 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    // Use consistent prefix for all storage keys
     const STORAGE_PREFIX = 'customer-assist-';
     const TOKEN_KEY = `${STORAGE_PREFIX}token`;
 
     const [token, setToken] = useState<string | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-    // Get token implementation - returns a Promise with token or null
     const getToken = async (): Promise<string | null> => {
-        // Try to get existing token from localStorage
         const existingToken = localStorage.getItem(TOKEN_KEY);
         if (existingToken) {
             return existingToken;
         }
-
-        // Generate a new token with UUID as subject
-        // const userId = uuidv7();
 
         try {
             // In a real implementation, the server would sign this token
@@ -51,7 +45,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 .setExpirationTime('7d')
                 .sign(new TextEncoder().encode('demo-secret-key'));
 
-            // Store in localStorage
             localStorage.setItem(TOKEN_KEY, newToken);
             return newToken;
         } catch (error) {
@@ -60,8 +53,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     }
 
-    // Initialize auth state from storage on component mount
-    // Now using the getToken method for initialization
     useEffect(() => {
         const initializeAuth = async () => {
             const storedToken = await getToken();
@@ -76,16 +67,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []);
 
     const login = (newToken: string) => {
-        // Only use localStorage
         localStorage.setItem(TOKEN_KEY, newToken);
-
         setToken(newToken);
         setIsAuthenticated(true);
     }
 
     const logout = () => {
         localStorage.removeItem(TOKEN_KEY);
-
         setToken(null);
         setIsAuthenticated(false);
     }

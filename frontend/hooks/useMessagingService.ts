@@ -10,7 +10,7 @@ import {
   GetConversationsRequest,
   SendMessageRequest
 } from '../api/messagingServiceClient';
-import { useAuth } from '../context/AuthContext'; // Import your auth context/hook
+import { useAuth } from '../context/AuthContext';
 
 // Query keys for caching
 export const queryKeys = {
@@ -24,7 +24,7 @@ export const queryKeys = {
  */
 export const useMessagingService = () => {
   const queryClient = useQueryClient();
-  const { getToken } = useAuth(); // Get token from your auth context/hook
+  const { getToken } = useAuth();
 
   // Create the client instance with the token provider
   const messagingClient = new MessagingServiceClient(getToken);
