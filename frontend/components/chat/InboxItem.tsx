@@ -4,7 +4,8 @@ import { Bot, UserRound } from "lucide-react"
 import { format } from "date-fns"
 import { ConversationList } from "../../api/messagingServiceClient"
 import { InboxActionsPopover } from "./conversation/InboxActionsPopover"
-
+import { useMessagingService } from "../../hooks/useMessagingService"
+import { toast } from "sonner"
 interface InboxItemProps {
     conversation: ConversationList['conversations'][number]
     onClick?: () => void
@@ -14,6 +15,22 @@ export const InboxItem: React.FC<InboxItemProps> = ({
     conversation,
     onClick
 }) => {
+    const { useUpdateConversation } = useMessagingService()
+    const updateConversation = useUpdateConversation({
+        onError: (error) => {
+            toast.error('Error updating conversation:', { description: 'Please try again later' })
+        }
+    })
+
+    const onArchiveToggle = () => {
+        updateConversation.mutate({
+            conversationId: conversation.id,
+            data: {
+                archived: !conversation.archived
+            }
+        })
+    }
+
     return (
         <>
             <div className="relative group">
@@ -62,9 +79,8 @@ export const InboxItem: React.FC<InboxItemProps> = ({
                 {/* Item actions */}
                 <div className="absolute -translate-y-1/2 right-2 top-1/2">
                     <InboxActionsPopover
-                        onArchiveClick={() => { }}
-                        onAudioCallClick={() => { }}
-                        onVideoCallClick={() => { }}
+                        onArchiveClick={onArchiveToggle}
+                        isArchived={conversation.archived}
                     />
                 </div>
             </div>

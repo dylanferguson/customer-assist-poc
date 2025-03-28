@@ -1,17 +1,16 @@
 'use client'
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Archive, CircleEllipsis } from "lucide-react"
+import { Archive, CircleEllipsis, ArchiveRestore } from "lucide-react"
 import { useState } from "react";
 import { PopoverActionButton } from "./PopoverActionButton";
 
 type InboxActionsPopoverProps = {
     onArchiveClick: () => void;
-    onAudioCallClick: () => void;
-    onVideoCallClick: () => void;
+    isArchived: boolean;
 }
 
-export const InboxActionsPopover = ({ onArchiveClick, onAudioCallClick, onVideoCallClick }: InboxActionsPopoverProps) => {
+export const InboxActionsPopover = ({ onArchiveClick, isArchived }: InboxActionsPopoverProps) => {
     const [open, setOpen] = useState(false);
     const handleAction = (event: React.MouseEvent<HTMLButtonElement>, action: () => void) => {
         event?.stopPropagation()
@@ -25,7 +24,6 @@ export const InboxActionsPopover = ({ onArchiveClick, onAudioCallClick, onVideoC
                 <div
                     className={`${open ? 'text-gray-800' : 'invisible'}  bg-white rounded-full cursor-pointer group-hover:visible hover:text-gray-800 hover:bg-accent/90`}
                     onClick={(e) => {
-                        console.log(e)
                         e.stopPropagation();
                         setOpen(!open);
                     }}
@@ -36,8 +34,8 @@ export const InboxActionsPopover = ({ onArchiveClick, onAudioCallClick, onVideoC
             <PopoverContent className="w-30" align="center" side="top">
                 <div className="flex flex-col gap-3">
                     <PopoverActionButton
-                        icon={<Archive className="w-4 h-4" />}
-                        label="Archive"
+                        icon={isArchived ? <ArchiveRestore className='w-4 h-4' /> : <Archive className='w-4 h-4' />}
+                        label={isArchived ? 'Unarchive' : 'Archive'}
                         onClick={(event) => handleAction(event, onArchiveClick)}
                     />
                 </div>
