@@ -9,6 +9,7 @@ import { TypingIndicator } from '../ui/typing-indicator';
 import { TooltipTrigger, Tooltip, TooltipContent } from '../ui/tooltip';
 import { ChatActionsPopover } from './conversation/ChatActionsPopover';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface MessageWithStatus extends Message {
     pending?: boolean;
@@ -139,28 +140,20 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
     const [isAgentTyping, setIsAgentTyping] = useState(false);
     const [_isAgentTypingTimeout, setIsAgentTypingTimeout] = useState<NodeJS.Timeout | null>(null);
     const [messages, setMessages] = useState<MessageWithStatus[]>([]);
-    const { useConversation, useMessages, useSendMessage } = useMessagingService();
+    const { useMessages, useSendMessage } = useMessagingService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { subscribeToConversation, socket, isConnected } = useSocket();
 
-    // Scroll to bottom of messages
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, []);
 
-    // Fetch conversation data
-    const {
-        data: conversation,
-        isLoading: isLoadingConversation
-    } = useConversation(conversationId);
 
-    // Fetch messages for this conversation
     const {
         data: messagesData,
         isLoading: isLoadingMessages
     } = useMessages(conversationId);
 
-    // Send message mutation
     const { mutate: sendMessage } = useSendMessage({
         onMutate: (newMessage) => {
             // Create a temporary message with pending state
@@ -209,14 +202,14 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
             );
 
             // Optionally show an error message to the user
-            console.error('Failed to send message:', error);
+            toast.error('Failed to send message');
         }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageInput.trim() || !conversation) return;
+        if (!messageInput.trim() || !conversationId) return;
 
         sendMessage({
             conversationId,
@@ -300,7 +293,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         scrollToBottom();
     }, [messages, scrollToBottom]);
 
-    const loading = isLoadingConversation || isLoadingMessages;
+    const loading = isLoadingMessages;
 
     const handleLocationClick = () => {
         if (!navigator.geolocation) {
@@ -339,7 +332,7 @@ export const Conversation = ({ conversationId }: { conversationId: string }) => 
         );
     }
 
-    if (!conversation) {
+    if (!messagesData) {
         return <div>Conversation not found</div>;
     }
 

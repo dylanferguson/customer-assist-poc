@@ -28,7 +28,7 @@ export const InboxActionsPopover = ({ onArchiveClick, isArchived }: InboxActions
                         setOpen(!open);
                     }}
                 >
-                    <CircleEllipsis className="stroke-[1.5] w-7 h-7 stroke-gray-700 hover:stroke-gray-700" />
+                    <CircleEllipsis className="stroke-[1.5] w-7 h-7 stroke-gray-500 hover:stroke-gray-500" />
                 </div>
             </PopoverTrigger>
             <PopoverContent className="w-30" align="center" side="top">
