@@ -12,6 +12,7 @@ import { ConnectWebsocketService } from './connect-websocket.service';
 import { ConversationsGateway } from './conversations.gateway';
 import { ConnectMessage, EVENT_CONTENT_TYPE } from './schemas/connect-message.schema';
 import { TypingEvent } from './entities/websocket.entity';
+import { RedactionService } from '../common/services/redaction.service';
 
 @Injectable()
 export class ConversationsService {
@@ -25,6 +26,7 @@ export class ConversationsService {
     private readonly connectParticipantService: ConnectParticipantService,
     private readonly connectWebsocketService: ConnectWebsocketService,
     private readonly conversationsGateway: ConversationsGateway,
+    private readonly redactionService: RedactionService,
   ) {
   }
 
@@ -173,10 +175,11 @@ export class ConversationsService {
     const conversation = this.findOne(conversationId);
     if (!conversation) return null;
 
+    const redactedContent = this.redactionService.redactText(createMessageDto.content);
     const message: Message = {
       conversationId: conversationId,
       id: `msg_${uuidv4()}`,
-      content: createMessageDto.content,
+      content: redactedContent,
       contentType: 'plain_text',
       createdAt: new Date(),
       participantRole: ParticipantRole.CUSTOMER,
@@ -196,7 +199,7 @@ export class ConversationsService {
 
       await this.connectParticipantService.sendMessage({
         connectionToken: session.connectionToken,
-        content: message.content,
+        content: redactedContent,
         contentType: 'text/plain',
       });
 

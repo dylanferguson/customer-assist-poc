@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ConnectParticipantService } from './connect-participant.service';
 import { ConnectWebsocketService } from './connect-websocket.service';
 import { ConversationsGateway } from './conversations.gateway';
+import { RedactionService } from '../common/services/redaction.service';
 
 @Module({
   controllers: [ConversationsController],
@@ -14,7 +15,8 @@ import { ConversationsGateway } from './conversations.gateway';
     AmazonConnectService,
     ConnectParticipantService,
     ConnectWebsocketService,
-    ConversationsGateway
+    ConversationsGateway,
+    RedactionService
   ],
   exports: [ConversationsService],
   imports: [
